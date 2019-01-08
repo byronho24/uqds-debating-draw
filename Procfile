@@ -1,1 +1,1 @@
-web: gunicorn uqds_internals.wsgi --log-file--
+web: gunicorn uqds_internals.wsgi
