@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>UQDS Team Signup</title>
+  </head>
+  <body>
+    <h1> UQDS Signup Form </h1>
+    <form class="Signup" action="index.html" method="post">
+      Team Name:<br>
+      <input type="text" name="team_name"><br><br>
+
+        <!--Use the mako library for templating.
+          Generates form for each speaker-->
+        {% for i in range(1,6) %}
+          <fieldset>
+            <legend>Team Speaker {{i}}:</legend>
+            Name:<br>
+            <input type="text" name="speaker_name"><br>
+            Are you currently in the state team?<br>
+            <input type="radio" name="state" value="yes"> Yes <br>
+            <input type="radio" name="state" value="no"> No <br>
+            Are you a pro?<br>
+            <input type="radio" name="pro" value="yes"> Yes <br>
+            <input type="radio" name="pro" value="no"> No <br>
+            Did you attend the Easters break, but did <b>not</b> compete?<br>
+            <input type="radio" name="easters_attend" value="yes"> Yes <br>
+            <input type="radio" name="easters_attend" value="no"> No <br>
+            Did you <b>compete</b> in the Easters break?<br>
+            <input type="radio" name="easters_break" value="yes"> Yes <br>
+            <input type="radio" name="easters_break" value="no"> No <br>
+            Did you compete in the Australs break?<br>
+            <input type="radio" name="australs_break" value="yes"> Yes <br>
+            <input type="radio" name="australs_break" value="no"> No <br>
+            Did you compete in the AWDC break?<br>
+            <input type="radio" name="awdc_break" value="yes"> Yes <br>
+            <input type="radio" name="awdc_break" value="no"> No <br>
+            Did you compete in the WUDC break?<br>
+            <input type="radio" name="wudc_break" value="yes"> Yes <br>
+            <input type="radio" name="wudc_break" value="no"> No <br>
+          </fieldset>
+        {% endfor %}
+    </form>
+  </body>
+</html>
