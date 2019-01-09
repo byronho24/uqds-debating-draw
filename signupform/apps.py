@@ -1,5 +1,5 @@
 from django.apps import AppConfig
 
 
-class SignupFormConfig(AppConfig):
+class SignupformConfig(AppConfig):
     name = 'signupform'
