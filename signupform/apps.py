@@ -1,5 +1,5 @@
 from django.apps import AppConfig
 
 
-class FixturesConfig(AppConfig):
-    name = 'fixtures'
+class SignupFormConfig(AppConfig):
+    name = 'signupform'
