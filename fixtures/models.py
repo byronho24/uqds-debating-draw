@@ -7,6 +7,9 @@ class Team(models.Model):
     wins = models.IntegerField(default=0)
     judged_before = models.BooleanField(default=False)
 
+    def __str__(self):
+        return self.team_name
+
 
 class Speaker(models.Model):
 
@@ -19,3 +22,6 @@ class Speaker(models.Model):
     australs_break = models.BooleanField(default=False)
     awdc_break = models.BooleanField(default=False)
     wudc_break = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.name
