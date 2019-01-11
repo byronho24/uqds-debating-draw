@@ -50,7 +50,7 @@ class Speaker(models.Model):
         return score > self.JUDGE_THRESHOLD
 
 
-class Attendance:
+class Attendance(models.Model):
 
     timestamp = models.DateTimeField('timestamp')
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
