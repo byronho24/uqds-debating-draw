@@ -3,6 +3,8 @@ from django.db import models
 
 class Team(models.Model):
 
+    MAXIMUM_SIZE = 5
+
     team_name = models.CharField(max_length=200, unique=True)
     wins = models.IntegerField(default=0)
     judged_before = models.BooleanField(default=False)
@@ -26,7 +28,8 @@ class Speaker(models.Model):
     }
 
     name = models.CharField(max_length=50, unique=True)
-    team = models.ForeignKey(Team, on_delete=models.CASCADE) # TODO: fix cascade
+    team = models.ForeignKey(Team, blank=True, null=True,
+    on_delete=models.SET_NULL)
     state_team = models.BooleanField(default=False)
     pro = models.BooleanField(default=False)
     easters_attend = models.BooleanField(default=False)
@@ -55,4 +58,7 @@ class Attendance(models.Model):
     timestamp = models.DateTimeField('timestamp')
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
     want_to_judge = models.BooleanField(default=True)
-    speakers = models.ManyToManyField(Speaker)
+    speakers = models.ManyToManyField(Speaker, \
+    limit_choices_to={
+        'team': team
+    })

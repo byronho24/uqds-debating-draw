@@ -20,5 +20,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('fixtures/', include('fixtures.urls')),
     path('signupform/', include('signupform.urls')),
-    path('attendanceform/', include('attendanceform.urls'))
+    path('attendanceform/', include('attendanceform.urls')),
+    path('^searchableselect/', include('searchableselect.urls'))
 ]

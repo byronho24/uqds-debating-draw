@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Team Signup Form</title>
+  </head>
+  <body>
+    <h1>UQDS Team Signup Form</h1>
+    <form class="signupform" method="post">
+      {% csrf_token %}
+      {{ form }}
+      <button type="submit">Submit</button>
+    </form>
+  </body>
+</html>

@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'fixtures.apps.FixturesConfig',
     'signupform.apps.SignupformConfig',
     'attendanceform.apps.AttendanceformConfig',
+    'searchableselect',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
