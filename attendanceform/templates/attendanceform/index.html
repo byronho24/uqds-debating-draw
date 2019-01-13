@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>UQDS Team Attendance Form</title>
+  </head>
+  <body>
+    <h1> Team Attendance Form </h1>
+    <form class="Attendance" action="{% url 'attendanceform:markattendance' %}"
+    method="post">
+      {% csrf_token %}
+      Team Name:<br>
+      <input type="text" name="team_name"><br><br>
+        {% for i in speaker_ids %}
+            <label for="speaker_{{i}}"></label>Attending Speaker {{i}}:<br>
+            <input type="text" name="speaker_{{i}}"
+            id="speaker_{{i}}"><br>
+        {% endfor %}
+      <br>
+      <input type="checkbox" name="want_to_judge" id="want_to_judge"
+      value="true">
+      <label for="want_to_judge">Check if you want to judge</label>
+      <br>
+      <input type="submit" value="Submit">
+    </form>
+  </body>
+</html>

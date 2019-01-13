@@ -34,6 +34,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'fixtures.apps.FixturesConfig',
     'signupform.apps.SignupformConfig',
+    'attendanceform.apps.AttendanceformConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -125,6 +126,6 @@ STATIC_URL = '/static/'
 # Activate Django-Heroku.
 django_heroku.settings(locals())
 
-# Database
+# Database on Heroku
 import dj_database_url
 DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)

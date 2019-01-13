@@ -6,13 +6,16 @@
   </head>
   <body>
     <h1> UQDS Signup Form </h1>
-    <form class="Signup" action="index.html" method="post">
+    <form class="Signup" action="{% url 'signupform:signup' %}" method="post">
+      {% csrf_token %}
       Team Name:<br>
       <input type="text" name="team_name"><br><br>
         {% for i in speaker_ids %}
-            Team Speaker {{i}}:<br>
-            <input type="text" name="speaker_name"><br>
+            <label for="speaker_{{i}}"></label>Team Speaker {{i}}:<br>
+            <input type="text" name="speaker_{{i}}"
+            id="speaker_{{i}}"><br>
         {% endfor %}
+      <input type="submit" value="Submit">
     </form>
   </body>
 </html>
