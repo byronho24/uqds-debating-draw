@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Team Attendance Form</title>
+  </head>
+  <body>
+    <h1>UQDS Team Attendance Form</h1>
+    <form class="attendanceform" method="post">
+      {% csrf_token %}
+      {{ form }}
+      <button type="submit">Submit</button>
+    </form>
+  </body>
+</html>

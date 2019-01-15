@@ -1,5 +1,7 @@
 from django import forms
 from fixtures.models import Team, Speaker
+from searchableselect.widgets import SearchableSelect
+
 
 class TeamSignupForm(forms.ModelForm):
 

@@ -1,5 +1,13 @@
 from django.db import models
+from datetime import datetime, timedelta
+from pytz import timezone
 
+LOCAL_TIMEZONE = timezone('Australia/Brisbane')
+TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
+
+def _local_time_now():
+    local_time = datetime.utcnow().astimezone(LOCAL_TIMEZONE)
+    return local_time
 
 class Team(models.Model):
 
@@ -43,22 +51,24 @@ class Speaker(models.Model):
 
     def is_qualified_as_judge(self) -> bool:
         score = 0
-        score += state_team * WEIGHTS['StateTeam'] + \
-                 pro * WEIGHTS['Pro'] + \
-                 easters_attend * WEIGHTS['EastersAttend'] + \
-                 easters_break * WEIGHTS['EastersBreak'] + \
-                 australs_break * WEIGHTS['AustralsBreak'] + \
-                 awdc_break * WEIGHTS['AWDCBreak'] + \
-                 wudc_break * WEIGHTS['WUDCBreak']
+        score += self.state_team * self.WEIGHTS['StateTeam'] + \
+                 self.pro * self.WEIGHTS['Pro'] + \
+                 self.easters_attend * self.WEIGHTS['EastersAttend'] + \
+                 self.easters_break * self.WEIGHTS['EastersBreak'] + \
+                 self.australs_break * self.WEIGHTS['AustralsBreak'] + \
+                 self.awdc_break * self.WEIGHTS['AWDCBreak'] + \
+                 self.wudc_break * self.WEIGHTS['WUDCBreak']
         return score > self.JUDGE_THRESHOLD
 
 
 class Attendance(models.Model):
 
-    timestamp = models.DateTimeField('timestamp')
+
+    timestamp = models.DateTimeField('timestamp', default=_local_time_now)
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
+    speakers = models.ManyToManyField(Speaker)
     want_to_judge = models.BooleanField(default=True)
-    speakers = models.ManyToManyField(Speaker, \
-    limit_choices_to={
-        'team': team
-    })
+
+
+    def __str__(self):
+        return f"{self.timestamp.strftime(TIME_FORMAT)}  {self.team.team_name}"
