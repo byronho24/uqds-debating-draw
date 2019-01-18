@@ -1,0 +1,35 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+  <head>
+  <link rel="stylesheet" type="text/css" href="{% static "fixtures/index_style.css" %}">
+  <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Poppins">
+  <title> Debating Team Allocator </title>
+  </head>
+
+  <body>
+    <h2 class="big_heading"> Fixtures </h2>
+    {% for debate in debates %}
+      <div class="card">
+        <div class="row">
+          <div class="cell teamcell">
+            <p class="team"> {{debate.0.team.name}} </p>
+          </div>
+          <div class="cell">
+           <p class="bold"> VS </p>
+          </div>
+          <div class="cell teamcell">
+            <p class="team"> {{debate.1.team.name}} </p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="cell">
+            <p class="judge"> Judge: {{debate.2.name}} </p>
+          </div>
+          </div>
+        </div>
+
+      {% endfor %}
+
+  </body>
+</html>

@@ -1,26 +1,46 @@
 from django.db import models
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, tzinfo
 from pytz import timezone
+from django.core.validators import MinValueValidator, MaxValueValidator
 
-LOCAL_TIMEZONE = timezone('Australia/Brisbane')
 TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 def _local_time_now():
-    local_time = datetime.utcnow().astimezone(LOCAL_TIMEZONE)
-    return local_time
+    return datetime.now(tz=Australia_Brisbane())
+
+class Australia_Brisbane(tzinfo):
+    """ Timezone for Australia/Brisbane """
+    def utcoffset(self, dt):
+        return timedelta(minutes=600)
+
+    def tzname(self, dt):
+        return "Australia/Brisbane"
+
+    def dst(self, dt):
+        return timedelta(0)
 
 class Team(models.Model):
 
     MAXIMUM_SIZE = 5
 
-    team_name = models.CharField(max_length=200, unique=True)
+    name = models.CharField(max_length=200, unique=True)
     wins = models.IntegerField(default=0)
     judged_before = models.BooleanField(default=False)
 
+    def get_speakers_avg_score(self):
+        avg = 0
+        speakers = self.speaker_set.all()
+        if not speakers:
+            return avg  # No speakers in team yet
+        for speaker in speakers:
+            avg += speaker.get_avg_score()
+        avg /= len(speakers)
+        return avg
+
     def __str__(self):
-        return self.team_name
+        return self.name
 
-
+# TODO: add field for storing the scores
 class Speaker(models.Model):
 
     JUDGE_THRESHOLD = 10
@@ -49,6 +69,16 @@ class Speaker(models.Model):
     def __str__(self):
         return self.name
 
+    def get_avg_score(self):
+        avg = 0
+        scores = self.score_set.all()
+        if not scores:
+            return avg  # No scores yet
+        for score in scores:
+            avg += score.score
+        avg /= len(scores)
+        return avg
+
     def is_qualified_as_judge(self) -> bool:
         score = 0
         score += self.state_team * self.WEIGHTS['StateTeam'] + \
@@ -71,4 +101,25 @@ class Attendance(models.Model):
 
 
     def __str__(self):
-        return f"{self.timestamp.strftime(TIME_FORMAT)}  {self.team.team_name}"
+        return f"{self.timestamp.strftime(TIME_FORMAT)}  {self.team.name}"
+
+
+class Match(models.Model):
+    date = models.DateField()
+    attendances = models.ManyToManyField(Attendance)
+    # TODO: need interface methods to check that there are exactly 2 teams
+    judge = models.ForeignKey(Speaker, null=True, on_delete=models.SET_NULL)
+    winning_team = models.ForeignKey(Team, blank=True, null=True, on_delete=models.SET_NULL)
+    # TODO: if delete team in tournament how should that be handled?
+
+    def __str__(self):
+        return f"{self.date}"
+
+class Score(models.Model):
+    speaker = models.ForeignKey(Speaker, on_delete=models.CASCADE)
+    score = models.DecimalField(max_digits=3, decimal_places=2,
+                                    validators=[
+                                        MaxValueValidator(10),
+                                        MinValueValidator(1)
+                                    ])
+    match = models.ForeignKey(Match, on_delete=models.CASCADE)
