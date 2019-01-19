@@ -1,7 +1,7 @@
 from .models import Attendance, Speaker, Team
 from typing import List
 import math
-from operator import itemgetter
+from operator import itemgetter, attrgetter
 
 
 # Weightings
@@ -38,6 +38,16 @@ def assign_competing_teams(attendances: List[Attendance]):
     :param attendances: Attendances to be assigned competitions to
     :return: tuple of (list of competing attendances, list of speakers judging)
     """
+    # Check if multiple Attendance entries exist for any given attending team
+    # If so only consider the most recent entry
+    attendances = sorted(attendances, key=attrgetter('timestamp'))
+    attendances_dict = {}
+    for attendance in attendances:
+        # Write into dictionary with team id as key - most recent entry for a
+        # given team would overwrite its previous attendance entries
+        attendances_dict[attendance.team.id] = attendance
+    attendances = list(attendances_dict.values())
+
     # FIXME: algo to account for qualified judges
     judges = []
 
