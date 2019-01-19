@@ -61,8 +61,8 @@ def matchmake(attendances_competing: List[Attendance], judges: List[Speaker]):
 
     :param attendances_competing: Attendances to assign competitions for
     :param judges: Available judges for the day
-    :return: List of (attendance1, attendance2, judge) tuples representing the
-    debates that are assigned
+    :return: List of dictionaries containing the following data:
+        {'attendance1', 'attendance2', 'judge'}
 
     """
     # TODO: account for vetoes
@@ -77,8 +77,10 @@ def matchmake(attendances_competing: List[Attendance], judges: List[Speaker]):
 
     for i in range(0, number_of_debates(attendances_competing)):
         # Return list of tuples indicating the pairs of competing teams and assign a judge
-        debates.append((attendances_competing[i*2],
-                        attendances_competing[i*2+1],
-                        judges[i]))
+        debates.append({
+            'attendance1': attendances_competing[i*2],
+            'attendance2': attendances_competing[i*2+1],
+            'judge': judges[i]
+        })
 
     return debates

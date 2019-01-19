@@ -10,25 +10,26 @@
   <body>
     <h2 class="big_heading"> Fixtures </h2>
     {% for debate in debates %}
-      <div class="card">
-        <div class="row">
-          <div class="cell teamcell">
-            <p class="team"> {{debate.0.team.name}} </p>
+      <a href="/fixtures/{{debate.match_id}}/">
+        <div class="card">
+          <div class="row">
+            <div class="cell teamcell">
+              <p class="team"> {{debate.attendance1.team.name}} </p>
+            </div>
+            <div class="cell">
+             <p class="bold"> VS </p>
+            </div>
+            <div class="cell teamcell">
+              <p class="team"> {{debate.attendance2.team.name}} </p>
+            </div>
           </div>
-          <div class="cell">
-           <p class="bold"> VS </p>
+          <div class="row">
+            <div class="cell">
+              <p class="judge"> Judge: {{debate.judge.name}} </p>
+            </div>
+            </div>
           </div>
-          <div class="cell teamcell">
-            <p class="team"> {{debate.1.team.name}} </p>
-          </div>
-        </div>
-        <div class="row">
-          <div class="cell">
-            <p class="judge"> Judge: {{debate.2.name}} </p>
-          </div>
-          </div>
-        </div>
-
+        </a>
       {% endfor %}
 
   </body>

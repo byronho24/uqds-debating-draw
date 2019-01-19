@@ -8,15 +8,17 @@ def fixtures(request):
 
     # Check whether fixtures are already generated
     matches = Match.objects.filter(date=date.today())
+
     if matches:
-        # Matches already assigned
         debates = []
         for match in matches:
-            debate = []
-            for attendance in match.attendances.all():
-                debate.append(attendance)
-            debate.append(match.judge)
-            debates.append(debate)
+            attendances = match.attendances.all()
+            debates.append({
+                'match_id': match.id,
+                'attendance1': attendances[0],
+                'attendance2': attendances[1],
+                'judge': match.judge
+            })
 
     else:
         # Generate fixtures
@@ -25,13 +27,19 @@ def fixtures(request):
         competing_attendances, judges = allocator.assign_competing_teams(attendances)
         debates = allocator.matchmake(competing_attendances, judges)
 
-        # Save generated fixtures to database
         for debate in debates:
+            # Save generated fixtures to database
             match = Match()
             match.date = date.today()
-            match.judge = debate[2]
+            match.judge = debate['judge']
             match.save()
-            match.attendances.add(debate[0], debate[1])
+            match.attendances.add(debate['attendance1'], debate['attendance2'])
             match.save()
 
+            # Add match_id to entries in debates
+            debate['match_id'] = match.id
+
     return render(request, 'fixtures/fixtures.html', {'debates': debates})
+
+def detail(request, match_id: int):
+    return HttpResponse(f"You are looking at match {match_id}.")
