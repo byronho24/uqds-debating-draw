@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from .forms import TeamSignupForm
 from fixtures.models import Team
+from django.contrib import messages
 
 context = {
     'speaker_ids': [1, 2, 3, 4, 5]
@@ -18,11 +19,11 @@ def signup(request):
     if request.method == 'POST':
         form = TeamSignupForm(request.POST)
         if form.is_valid():
-            team_name = form.cleaned_data['team_name']
+            team_name = form.cleaned_data['name']
             speakers = form.cleaned_data['speakers']
 
             # Create team
-            team = Team(team_name = team_name)
+            team = Team(name = team_name)
             team.save()
 
             # Assign team to speakers
@@ -31,7 +32,7 @@ def signup(request):
                     speaker.team = team
                     speaker.save()
 
-            return HttpResponse("Team signup successful.")
+            messages.success(request, 'Team signup successful.')
 
 
     form = TeamSignupForm()

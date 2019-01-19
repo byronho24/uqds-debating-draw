@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 from .forms import TeamAttendanceForm
+from django.contrib import messages
 
 context = {
     'speaker_ids': [1, 2, 3]
@@ -15,9 +16,7 @@ def markattendance(request):
         form = TeamAttendanceForm(request.POST)
         if form.is_valid():
             form.save()
-
-            return HttpResponse("Team attendance marked.")
-
+            messages.success(request, 'Your attendance has been marked.')
 
     form = TeamAttendanceForm()
     return render(request, 'attendanceform/form.html', {'form': form})

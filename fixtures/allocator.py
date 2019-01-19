@@ -65,6 +65,7 @@ def matchmake(attendances_competing: List[Attendance], judges: List[Speaker]):
     debates that are assigned
 
     """
+    # TODO: account for vetoes
     sorting_list = []
     for attendance in attendances_competing:
         team = attendance.team
