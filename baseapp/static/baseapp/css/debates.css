@@ -1,0 +1,13 @@
+.accordion {
+    transition: 0.4s;
+    cursor: pointer;
+}
+
+.active, .accordion:hover {
+    background-color: #aaaaaa
+}
+
+a, a:hover{
+  text-decoration: none;
+  color: currentcolor;
+}

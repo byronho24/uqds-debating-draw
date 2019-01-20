@@ -12,7 +12,7 @@
     <title>{% block title %}UQ Debating Society{% endblock %}</title>
 
     <!-- Extra styleseets/scripts specific for given template -->
-    <link rel="stylesheet" type="text/css" href="{% static "baseapp/css/fixtures.css" %}">
+    <link rel="stylesheet" type="text/css" href="{% static "baseapp/css/debates.css" %}">
     <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Poppins">
   </head>
   <body>
@@ -27,7 +27,7 @@
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav mr-auto">
           <li class="nav-item active">
-            <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+            <a class="nav-link" href="{% url 'baseapp:index' %}">Home <span class="sr-only">(current)</span></a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="{% url 'baseapp:signupform' %}">Team Sign Up</a>
@@ -36,7 +36,7 @@
             <a class="nav-link" href="{% url 'baseapp:attendanceform' %}">Team Attendance Form</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'baseapp:fixtures' %}">Today's Debates</a>
+            <a class="nav-link" href="{% url 'baseapp:debates' %}">Today's Debates</a>
           </li>
         </ul>
       </div>

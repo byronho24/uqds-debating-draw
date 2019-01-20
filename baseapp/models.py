@@ -1,12 +1,14 @@
 from django.db import models
 from datetime import datetime, timedelta, tzinfo
-from pytz import timezone
+from django.utils.timezone import make_naive
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 def _local_time_now():
-    return datetime.now(tz=Australia_Brisbane())
+    # FIXME: timezone conversion hardcoded for now - tried to implement the
+    # tzinfo class (as you can see below ) but for some reason it didn't work
+    return datetime.utcnow() + timedelta(hours=10)
 
 class Australia_Brisbane(tzinfo):
     """ Timezone for Australia/Brisbane """
@@ -104,7 +106,7 @@ class Attendance(models.Model):
         return f"{self.timestamp.strftime(TIME_FORMAT)}  {self.team.name}"
 
 
-class Match(models.Model):
+class Debate(models.Model):
     date = models.DateField()
     attendances = models.ManyToManyField(Attendance)
     # TODO: need interface methods to check that there are exactly 2 teams
@@ -122,4 +124,4 @@ class Score(models.Model):
                                         MaxValueValidator(10),
                                         MinValueValidator(1)
                                     ])
-    match = models.ForeignKey(Match, on_delete=models.CASCADE)
+    debate = models.ForeignKey(Debate, on_delete=models.CASCADE)

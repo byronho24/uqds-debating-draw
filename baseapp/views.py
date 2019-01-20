@@ -3,44 +3,31 @@ from django.http import HttpResponse
 from datetime import date, datetime
 from . import allocator
 from .forms import TeamAttendanceForm, TeamSignupForm
-from .models import Attendance, Speaker, Team, Score, Match
+from .models import Attendance, Speaker, Team, Score, Debate
+from django.contrib import messages
 
 def index(request):
     return render(request, 'baseapp/index.html')
 
-def fixtures(request):
+def debates(request):
 
-    # Check whether fixtures are already generated
-    matches = Match.objects.filter(date=date.today())
+    # Check whether debates are already generated
+    debates = Debate.objects.filter(date=date.today())
 
-    if not matches:
-        # Generate fixtures
+    if not debates:
+        # Generate debates
         # Retrieve all the attendance data for the day
         attendances = list(Attendance.objects.filter(timestamp__date=date.today()))
-        competing_attendances, judges = allocator.assign_competing_teams(attendances)
-        debates = allocator.matchmake(competing_attendances, judges)
-        matches = []
+        debates = allocator.generate_debates(attendances)
 
-        for debate in debates:
-            # Save generated fixtures to database
-            match = Match()
-            match.date = date.today()
-            match.judge = debate['judge']
-            match.save()
-            match.attendances.add(debate['attendance1'], debate['attendance2'])
-            match.save()
+    return render(request, 'baseapp/debates.html', {'debates': debates})
 
-            # add match to matches
-            matches.append(match)
-
-    return render(request, 'baseapp/fixtures.html', {'debates': matches})
-
-def detail(request, match_id: int):
-    # return HttpResponse(f"You are looking at match {match_id}.")
-    # Get match based on match_id
-    match = get_object_or_404(Match, pk=match_id)
-    context = {'match': match}
-    return render(request, 'baseapp/fixture_detail.html', context)
+def detail(request, debate_id: int):
+    # return HttpResponse(f"You are looking at debate {debate_id}.")
+    # Get debate based on debate_id
+    debate = get_object_or_404(Debate, pk=debate_id)
+    context = {'debate': debate}
+    return render(request, 'baseapp/debate_detail.html', context)
 
 def attendanceform(request):
     if request.method == 'POST':

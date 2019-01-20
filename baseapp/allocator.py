@@ -1,4 +1,4 @@
-from .models import Attendance, Speaker, Team
+from .models import Attendance, Speaker, Team, Debate
 from typing import List
 import math
 from operator import itemgetter, attrgetter
@@ -31,7 +31,7 @@ def _assign_judging_score(attendance: Attendance):
 def number_of_debates(attendances: List[Attendance]):
     return math.floor(len(attendances) / 2)
 
-def assign_competing_teams(attendances: List[Attendance]):
+def _assign_competing_teams(attendances: List[Attendance]):
     """
     Determines which teams are competing and which teams are judging on the day.
 
@@ -65,14 +65,13 @@ def assign_competing_teams(attendances: List[Attendance]):
     # Or do we do that after the match?
     return ([attendance for attendance in attendances], judges)
 
-def matchmake(attendances_competing: List[Attendance], judges: List[Speaker]):
+def _matchmake(attendances_competing: List[Attendance], judges: List[Speaker]):
     """
     Assigns the debates for the day.
 
     :param attendances_competing: Attendances to assign competitions for
     :param judges: Available judges for the day
-    :return: List of dictionaries containing the following data:
-        {'attendance1', 'attendance2', 'judge'}
+    :return: List of Debate objects
 
     """
     # TODO: account for vetoes
@@ -86,11 +85,26 @@ def matchmake(attendances_competing: List[Attendance], judges: List[Speaker]):
     debates = []
 
     for i in range(0, number_of_debates(attendances_competing)):
-        # Return list of tuples indicating the pairs of competing teams and assign a judge
-        debates.append({
-            'attendance1': attendances_competing[i*2],
-            'attendance2': attendances_competing[i*2+1],
-            'judge': judges[i]
-        })
+        debate = Debate()
+        debate.date = date.today()
+        debate.judge = judges[i]
+        debate.save()
+        debate.attendances.add(
+            attendances_competing[i*2], attendances_competing[i*2+1])
+        debate.save()
 
+        debates.append(debate)
+
+    return debates
+
+def generate_debates(attendances: List[Attendance]) -> List[Debate]:
+    """
+    Generates debates given the list of attendances for the day.
+    Instantiates Debate objects and saves them to the database.
+
+    :param attendances: Attendances to generate debates for
+    :return: List of Debate objects
+    """
+    competing_attendances, judges = _assign_competing_teams(attendances)
+    debates = _matchmake(competing_attendances, judges)
     return debates
