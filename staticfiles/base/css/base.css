@@ -1,0 +1,9 @@
+body {
+  background-color: #f2e6fd
+}
+
+.container {
+  min-height: 90vh;
+  height: 90vh;
+  border-radius: 2vw 2vw 0vw 0vw;
+}

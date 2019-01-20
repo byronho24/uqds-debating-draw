@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %} Fixtures - {{ block.super }} {% endblock %}
+
+{% block content %}
+  <div class="col-12 text-center">
+    <h4> Fixtures </h4>
+  </div>
+    {% for debate in debates %}
+      <a href="/fixtures/{{debate.id}}/">
+        <div class="card">
+          <div class="row">
+            {% with attendances=debate.attendances.all %}
+            <div class="cell teamcell">
+              <p class="team"> {{attendances.0.team.name}} </p>
+            </div>
+            <div class="cell">
+             <p class="bold"> VS </p>
+            </div>
+            <div class="cell teamcell">
+              <p class="team"> {{attendances.1.team.name}} </p>
+            </div>
+            {% endwith %}
+          </div>
+          <div class="row">
+            <div class="cell">
+              <p class="judge"> Judge: {{debate.judge.name}} </p>
+            </div>
+          </div>
+        </div>
+      </a>
+    {% endfor %}
+{% endblock %}

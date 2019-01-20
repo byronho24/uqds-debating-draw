@@ -32,9 +32,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'fixtures.apps.FixturesConfig',
-    'signupform.apps.SignupformConfig',
-    'attendanceform.apps.AttendanceformConfig',
+    'baseapp.apps.BaseAppConfig',
     'searchableselect',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -59,7 +57,7 @@ ROOT_URLCONF = 'uqds_internals.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['templates/'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -123,6 +121,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "staticfiles"),
+]
+
 
 # Activate Django-Heroku.
 django_heroku.settings(locals())
