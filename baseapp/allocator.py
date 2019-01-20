@@ -1,4 +1,4 @@
-from .models import Attendance, Speaker, Team, Debate
+from .models import Attendance, Speaker, Team, Debate, _local_time_now
 from typing import List
 import math
 from operator import itemgetter, attrgetter
@@ -86,7 +86,7 @@ def _matchmake(attendances_competing: List[Attendance], judges: List[Speaker]):
 
     for i in range(0, number_of_debates(attendances_competing)):
         debate = Debate()
-        debate.date = date.today()
+        debate.date = _local_time_now().date()
         debate.judge = judges[i]
         debate.save()
         debate.attendances.add(
