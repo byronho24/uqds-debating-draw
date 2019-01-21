@@ -5,6 +5,9 @@ from . import allocator
 from .forms import TeamAttendanceForm, TeamSignupForm
 from .models import Attendance, Speaker, Team, Score, Debate
 from django.contrib import messages
+from django.urls import reverse
+from operator import itemgetter
+
 
 def index(request):
     return render(request, 'baseapp/index.html')
@@ -62,3 +65,24 @@ def signupform(request):
 
     form = TeamSignupForm()
     return render(request, 'baseapp/signupform.html', {'form': form})
+
+def table(request):
+    # Gets all the teams
+    teams = list(Team.objects.all())
+    # TODO: Sort teams based on wins
+    sorting_list = []
+    for team in teams:
+        sorting_list.append((team.wins, team.get_speakers_avg_score(), team))
+    sorting_list.sort(key=itemgetter(0,1), reverse=True)
+    sorted_teams = []
+    for item in sorting_list:
+        team = item[2]
+        sorted_teams.append({
+            'name': team.name,
+            'wins': team.wins,
+            'speaker_avg_score': team.get_speakers_avg_score(),
+        })
+    context = {
+        'teams': sorted_teams,
+    }
+    return render(request, 'baseapp/table.html', context)

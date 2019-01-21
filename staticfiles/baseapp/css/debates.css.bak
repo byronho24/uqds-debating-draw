@@ -1,0 +1,77 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins';
+}
+
+.row {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-evenly;
+    align-items: center;
+    width: 100%;
+}
+
+.cell {
+    text-align: center;
+    vertical-align: middle;
+    padding: 0vw 2vw 0vw 2vw;
+}
+
+.card {
+    display: table;
+    width: 98%;
+    background-color: #f0f1f3;
+    border-radius: 5px;
+    margin: 8px auto;
+    box-shadow: 3px 3px 3px #bababa;
+}
+
+.judge {
+    font-weight: light;
+    font-size: 12px;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.teamcell {
+    width: 40%;
+}
+
+.accordion {
+    transition: 0.4s;
+    cursor: pointer;
+}
+
+.active, .accordion:hover {
+    background-color: #aaaaaa
+}
+
+.panel {
+    padding: 0 18px;
+    background-color: white;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease-out;
+}
+
+.panel .row {
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.teamsheet td {
+    padding: 2px 10px 2px 5px;
+    text-align: left;
+}
+
+.big_heading {
+    text-align: center;
+}
+
+a, a:hover{
+  text-decoration: none;
+  color: currentcolor;
+}

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Team Table - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12 text-center">
+    <h4>Team Table</h4>
+  </div>
+</div>
+<div class="row">
+  <div class="col-12">
+    <table class="table table-hover table-bordered">
+      <thead class="thead-light">
+        <th scope="col">Team</th>
+        <th scope="col">Wins</th>
+        <th scope="col">Speakers' Average Score</th>
+      </thead>
+      <tbody>
+        {% for team in teams %}
+        <tr>
+          <td>{{ team.name }}</td>
+          <td>{{ team.wins }}</td>
+          <td>{{ team.speaker_avg_score }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+
+    </table>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,7 +1,7 @@
 from .models import Attendance, Speaker, Team, Debate, _local_time_now
 from typing import List
 import math
-from operator import itemgetter, attrgetter
+from operator import itemgetter
 
 
 # Weightings
@@ -28,7 +28,7 @@ def _assign_judging_score(attendance: Attendance):
 
     return score
 
-def number_of_debates(attendances: List[Attendance]):
+def _number_of_debates(attendances: List[Attendance]):
     return math.floor(len(attendances) / 2)
 
 def _assign_competing_teams(attendances: List[Attendance]):
@@ -55,7 +55,7 @@ def _assign_competing_teams(attendances: List[Attendance]):
     attendances = sorted(attendances, key=_assign_judging_score, reverse=True)
 
     # Pop until we have enough judges
-    while len(judges) <  number_of_debates(attendances) or len(attendances) % 2 != 0 :
+    while len(judges) <  _number_of_debates(attendances) or len(attendances) % 2 != 0 :
         # Pop one team
         judging_attendance = attendances.pop(0)
         for judge in judging_attendance.speakers.all():
@@ -84,7 +84,7 @@ def _matchmake(attendances_competing: List[Attendance], judges: List[Speaker]):
     attendances_competing = [item[2] for item in sorting_list]
     debates = []
 
-    for i in range(0, number_of_debates(attendances_competing)):
+    for i in range(0, _number_of_debates(attendances_competing)):
         debate = Debate()
         debate.date = _local_time_now().date()
         debate.judge = judges[i]
@@ -105,6 +105,8 @@ def generate_debates(attendances: List[Attendance]) -> List[Debate]:
     :param attendances: Attendances to generate debates for
     :return: List of Debate objects
     """
+    if not attendances:
+        return []   # No attendances
     competing_attendances, judges = _assign_competing_teams(attendances)
     debates = _matchmake(competing_attendances, judges)
     return debates

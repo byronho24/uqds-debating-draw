@@ -1,6 +1,5 @@
 from django.db import models
 from datetime import datetime, timedelta, tzinfo
-from django.utils.timezone import make_naive
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 TIME_FORMAT = '%Y-%m-%d %H:%M:%S'

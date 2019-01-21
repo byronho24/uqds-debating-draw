@@ -23,5 +23,6 @@ class TeamSignupForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         self.fields['speakers'] = forms.ModelMultipleChoiceField(
-            queryset=Speaker.objects.filter(team__isnull=True))
-            # Only speakers that are not in any team are available for selection
+            queryset=Speaker.objects.filter(team__isnull=True),
+        )
+        # Only speakers that are not in any team are available for selection
