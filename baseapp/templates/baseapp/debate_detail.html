@@ -4,11 +4,10 @@
 {% block content %}
 
   <div class="row">
-    {% for attendance in debate.attendances.all %}
     <div class="col-sm-6">
       <div class="row">
         <div class="col-12 text-center">
-          <h4>{{ attendance.team.name }}</h4>
+          <h4>{{ debate.attendance1.team.name }}</h4>
         </div>
       </div>
 
@@ -18,7 +17,7 @@
             <tr>
               <th>Attending Speakers:</th>
             </tr>
-            {% for speaker in attendance.speakers.all %}
+            {% for speaker in debate.attendance1.speakers.all %}
             <tr>
               <td>{{ speaker.name }}</td>
             </tr>
@@ -27,7 +26,29 @@
         </div>
       </div>
     </div>
-    {% endfor %}
+
+    <div class="col-sm-6">
+      <div class="row">
+        <div class="col-12 text-center">
+          <h4>{{ debate.attendance2.team.name }}</h4>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12">
+          <table>
+            <tr>
+              <th>Attending Speakers:</th>
+            </tr>
+            {% for speaker in debate.attendance2.speakers.all %}
+            <tr>
+              <td>{{ speaker.name }}</td>
+            </tr>
+            {% endfor %}
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 
 {% endblock %}

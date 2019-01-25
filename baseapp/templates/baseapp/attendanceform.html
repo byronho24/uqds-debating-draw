@@ -1,4 +1,25 @@
 {% extends 'baseapp/form.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
 {% block title %}Team Attendance Form - {{ block.super }}{% endblock %}
 
+{% block extra_head %}
+<!-- Hide speakers and want_to_judge forms on load -->
+<style>
+  #div_id_speakers {display: none;}
+  #div_id_want_to_judge {display: none;}
+  #id_submit {display: none;}
+</style>
+{% endblock %}
+
 {% block form_heading %}UQDS Team Attendance Form{% endblock %}
+
+{% block form %}
+{{ form|crispy}}
+{% endblock %}
+
+{% block nav-item %}attendanceform{% endblock %}
+
+{% block body_js %}
+<script src="{% static "baseapp/js/attendanceform.js" %}"></script>
+{% endblock %}

@@ -15,13 +15,13 @@
         <div class="alert alert-secondary">
           <div class="row py-2">
             <div class="col-12 col-sm-5 text-center">
-              <h5>{{ debate.attendances.all.0.team.name }}</h5>
+              <h5>{{ debate.attendance1.team.name }}</h5>
             </div>
             <div class="col-12 col-sm-2 text-center">
               <h5 style="font-weight:bold;">VS</h5>
             </div>
             <div class="col-12 col-sm-5 text-center">
-              <h5>{{ debate.attendances.all.1.team.name }}</h5>
+              <h5>{{ debate.attendance2.team.name }}</h5>
             </div>
           </div>
 
@@ -38,3 +38,5 @@
   {% endfor %}
 
 {% endblock %}
+
+{% block nav-item %}debates{% endblock %}

@@ -22,8 +22,6 @@ class Australia_Brisbane(tzinfo):
 
 class Team(models.Model):
 
-    MAXIMUM_SIZE = 5
-
     name = models.CharField(max_length=200, unique=True)
     wins = models.IntegerField(default=0)
     judged_before = models.BooleanField(default=False)
@@ -107,10 +105,10 @@ class Attendance(models.Model):
 
 class Debate(models.Model):
     date = models.DateField()
-    attendances = models.ManyToManyField(Attendance)
-    # TODO: need interface methods to check that there are exactly 2 teams
+    attendance1 = models.ForeignKey(Attendance, null=True, related_name='attendance1', on_delete=models.CASCADE)
+    attendance2 = models.ForeignKey(Attendance, null=True, related_name='attendance2', on_delete=models.CASCADE)
     judge = models.ForeignKey(Speaker, null=True, on_delete=models.SET_NULL)
-    winning_team = models.ForeignKey(Team, blank=True, null=True, on_delete=models.SET_NULL)
+    winning_team = models.ForeignKey(Team, null=True, on_delete=models.CASCADE)
     # TODO: if delete team in tournament how should that be handled?
 
     def __str__(self):

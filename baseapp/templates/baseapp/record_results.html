@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Record Results - {{block.super}} {% endblock %}
+
+{% block content %}
+<h4>Record Results</h4>
+
+{% for debate_name,form in debates %}
+  <h6>{{debate_name}}</h6>
+  {{ form|crispy }}
+{% endfor %}
+{% endblock %}
+
+{% block nav-item %}Record Results{% endblock %}

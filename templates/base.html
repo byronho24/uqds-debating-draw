@@ -14,6 +14,8 @@
     <!-- Extra styleseets/scripts specific for given template -->
     <link rel="stylesheet" type="text/css" href="{% static "baseapp/css/debates.css" %}">
     <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Poppins">
+    {% block extra_head %}{% endblock %}
+
   </head>
   <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -26,20 +28,23 @@
 
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav mr-auto">
-          <li class="nav-item active">
+          <li class="nav-item"  id="nav-item-home">
             <a class="nav-link" href="{% url 'baseapp:index' %}">Home <span class="sr-only">(current)</span></a>
           </li>
-          <li class="nav-item">
+          <li class="nav-item" id="nav-item-signupform">
             <a class="nav-link" href="{% url 'baseapp:signupform' %}">Team Sign Up</a>
           </li>
-          <li class="nav-item">
+          <li class="nav-item" id="nav-item-attendanceform">
             <a class="nav-link" href="{% url 'baseapp:attendanceform' %}">Team Attendance Form</a>
           </li>
-          <li class="nav-item">
+          <li class="nav-item" id="nav-item-debates">
             <a class="nav-link" href="{% url 'baseapp:debates' %}">Today's Debates</a>
           </li>
-          <li class="nav-item">
+          <li class="nav-item" id="nav-item-table">
             <a class="nav-link" href="{% url 'baseapp:table' %}">Team Table</a>
+          </li>
+          <li class="nav-item" id="nav-item-record-results">
+            <a class="nav-link" href="{% url 'baseapp:record_results' %}">Record Debate Results</a>
           </li>
         </ul>
       </div>
@@ -50,12 +55,19 @@
       {% endblock %}
     </div>
 
-
-
-
     <!-- Boostrap JS Scripts -->
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
+
+    <!-- Runtime scripts -->
+    <script type="text/javascript" src="{% static "base/js/base.js" %}"></script>
+
+    <!-- Set active nav-item -->
+    <script type="text/javascript">
+    $( "#nav-item-{% block nav-item %}home{% endblock %}" ).addClass("active");
+    </script>
+    <!-- Extra body js scripts -->
+    {% block body_js %}{% endblock %}
   </body>
 </html>

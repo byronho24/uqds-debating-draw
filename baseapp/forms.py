@@ -1,5 +1,5 @@
 from django import forms
-from .models import Attendance, Speaker, Team
+from .models import Attendance, Speaker, Team, Debate
 from searchableselect.widgets import SearchableSelect
 
 
@@ -7,7 +7,7 @@ class TeamAttendanceForm(forms.ModelForm):
 
     class Meta:
         model = Attendance
-        exclude = ('timestamp',)
+        fields = ('team', 'speakers', 'want_to_judge')
         labels = {
             'speakers': "Attending Speakers"
         }
@@ -17,7 +17,7 @@ class TeamSignupForm(forms.ModelForm):
 
     class Meta:
         model = Team
-        exclude = ('wins', 'judged_before')
+        fields = ('name',)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -26,3 +26,6 @@ class TeamSignupForm(forms.ModelForm):
             queryset=Speaker.objects.filter(team__isnull=True),
         )
         # Only speakers that are not in any team are available for selection
+
+class DebateResultsForm(forms.Form):
+    pass

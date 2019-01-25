@@ -6,8 +6,10 @@
     <h4>{% block form_heading %}{% endblock %}</h4>
     <form class="form" method="post">
       {% csrf_token %}
-      {{ form|crispy }}
-      <button type="submit">Submit</button>
+      {% block form %}
+        {{ form|crispy }}
+      {% endblock %}
+      <button type="submit" id="id_submit" class="btn btn-primary">Submit</button>
     </form>
     <!--
       success/ failure message goes here

@@ -1,7 +1,7 @@
 from .models import Attendance, Speaker, Team, Debate, _local_time_now
 from typing import List
 import math
-from operator import itemgetter
+from operator import itemgetter, attrgetter
 
 
 # Weightings
@@ -88,9 +88,8 @@ def _matchmake(attendances_competing: List[Attendance], judges: List[Speaker]):
         debate = Debate()
         debate.date = _local_time_now().date()
         debate.judge = judges[i]
-        debate.save()
-        debate.attendances.add(
-            attendances_competing[i*2], attendances_competing[i*2+1])
+        debate.attendance1 = attendances_competing[i*2]
+        debate.attendance2 = attendances_competing[i*2+1]
         debate.save()
 
         debates.append(debate)
