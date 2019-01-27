@@ -1,5 +1,9 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %} Fixtures - {{ block.super }} {% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" type="text/css" href="{% static "baseapp/css/debates.css" %}">
+{% endblock %}
 
 {% block content %}
   <div class="row">

@@ -1,8 +1,9 @@
 from django.contrib import admin
 
-from .models import Team, Speaker, Attendance, Debate
+from .models import Team, Speaker, Attendance, Debate, Score
 # Register your models here.
 admin.site.register(Team)
 admin.site.register(Speaker)
 admin.site.register(Attendance)
 admin.site.register(Debate)
+admin.site.register(Score)

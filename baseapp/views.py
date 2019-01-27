@@ -2,11 +2,12 @@ from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from datetime import date, datetime
 from . import allocator
-from .forms import TeamAttendanceForm, TeamSignupForm, DebateResultsForm
+from .forms import TeamAttendanceForm, TeamSignupForm, DebateResultsForm, ScoreForm
 from .models import Attendance, Speaker, Team, Score, Debate
 from django.contrib import messages
 from django.urls import reverse
 from operator import itemgetter
+from itertools import chain
 
 
 def index(request):
@@ -40,6 +41,7 @@ def attendanceform(request):
     #
     #
     if request.method == 'POST':
+        print(request.POST)
         form = TeamAttendanceForm(request.POST)
         if form.is_valid():
             form.save()
@@ -102,14 +104,61 @@ def record_results(request):
     debates = Debate.objects.filter(date=date.today())
     context = {'debates': []}
     for debate in debates:
-        debate_name = "{team1} VS {team2}".format(
-            team1=debate.attendance1.team.name,
-            team2=debate.attendance2.team.name
-        )
-        debate_form = DebateResultsForm()
-        context['debates'].append((debate_name, debate_form))
+        context["debates"].append(debate)
+
     return render(request, 'baseapp/record_results.html', context)
 
+
+def record_results_detail(request, debate_id: int):
+    debate = Debate.objects.get(pk=debate_id)
+
+    if request.method == "POST":
+        speaker_ids = [speaker.id for speaker in debate.attendance1.speakers.all()] + \
+                            [speaker.id for speaker in debate.attendance2.speakers.all()]
+        winning_team_form = DebateResultsForm(request.POST)
+        speaker_score_forms = [ScoreForm(request.POST, prefix=str(id))
+                                   for id in speaker_ids]
+
+        if winning_team_form.is_valid() and all([sf.is_valid() for sf in speaker_score_forms]):
+            # Update winner for debate
+            debate.winning_team = winning_team_form.cleaned_data['winning_team']
+            debate.save()
+
+            # Record speaker's scores
+            for sf in speaker_score_forms:
+                sf.save()
+
+            messages.success(request, "Results for this debate are successfully recorded.")
+
+        else:
+            messages.error(request, "Form details invalid. Please try again.")
+    # Add speaker score forms
+    attendances = []
+    for attendance in [debate.attendance1, debate.attendance2]:
+        team = {
+            "team_name": attendance.team.name,
+            "speakers": [],
+        }
+        for speaker in attendance.speakers.all():
+
+            team["speakers"].append({
+                'name': speaker.name,
+                'score_form': ScoreForm(
+                    prefix=str(speaker.id),
+                    initial={
+                        'speaker': speaker.id,
+                        'debate': debate.id,
+                })
+            })
+        attendances.append(team)
+
+    context = {
+        'debate_id': debate.id,
+        'winning_team_form': DebateResultsForm(),
+        'attendances': attendances,
+    }
+
+    return render(request, 'baseapp/record_results_detail.html', context)
 
 def filter_speakers_in_team(request):
     team_id = request.GET.get('team_id', None);
@@ -117,7 +166,15 @@ def filter_speakers_in_team(request):
         "speakers": [],
     }
     if (team_id is not None) and team_id != '':
-        team = Team.objects.get(pk=team_id);
+        team = Team.objects.get(pk=team_id)
         for speaker in team.speaker_set.all():
             data["speakers"].append(speaker.id)
+    return JsonResponse(data)
+
+def filter_teams_in_debate(request):
+    debate_id = request.GET.get('debate_id', None);
+    data = {}
+    if (debate_id is not None) and debate_id != '':
+        debate = Debate.objects.get(pk=debate_id)
+        data['teams'] = [debate.attendance1.team.id, debate.attendance2.team.id]
     return JsonResponse(data)

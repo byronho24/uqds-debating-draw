@@ -21,7 +21,6 @@ $(document).ready(function() {
 });
 
 $("#id_team").on('change', function() {
-  console.log( $(this).val() );
   var team_id = $(this).val();
 
   $.ajax({
@@ -34,7 +33,6 @@ $("#id_team").on('change', function() {
       let speakers = data.speakers;
       $('#id_speakers option').hide();
       for (let i = 0; i < speakers.length; i++) {
-        console.log(speakers[i]);
         $('#id_speakers option').filter(function() {
           return this.value == speakers[i];
         }).show();

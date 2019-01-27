@@ -108,15 +108,17 @@ class Debate(models.Model):
     attendance1 = models.ForeignKey(Attendance, null=True, related_name='attendance1', on_delete=models.CASCADE)
     attendance2 = models.ForeignKey(Attendance, null=True, related_name='attendance2', on_delete=models.CASCADE)
     judge = models.ForeignKey(Speaker, null=True, on_delete=models.SET_NULL)
-    winning_team = models.ForeignKey(Team, null=True, on_delete=models.CASCADE)
+    winning_team = models.ForeignKey(Team, null=True, blank=False,
+                                        default=None, on_delete=models.CASCADE)
     # TODO: if delete team in tournament how should that be handled?
 
     def __str__(self):
         return f"{self.date}"
 
+
 class Score(models.Model):
     speaker = models.ForeignKey(Speaker, on_delete=models.CASCADE)
-    score = models.DecimalField(max_digits=3, decimal_places=2,
+    score = models.DecimalField(max_digits=2, decimal_places=1, blank=False,
                                     validators=[
                                         MaxValueValidator(10),
                                         MinValueValidator(1)

@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     # Third-party apps
     'searchableselect',
     'crispy_forms',
+    'widget_tweaks',
     # Django default
     'django.contrib.admin',
     'django.contrib.auth',

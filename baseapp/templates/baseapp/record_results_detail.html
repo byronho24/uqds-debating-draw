@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load widget_tweaks %}
+{% block title %} Record Results Detail - {{ block.super }} {% endblock %}
+
+
+{% block content %}
+<div class="row">
+  <div class="col-12 text-center">
+    <h4>Record Results</h4>
+  </div>
+</div>
+
+<div class="row my-3">
+  <div class="col-12 col-md-5 text-center">
+    <h5 style="font-weight:bold;">{{attendances.0.team_name}}</h5>
+  </div>
+  <div class="col-12 col-md-2 text-center">
+    <h5>VS</h5>
+  </div>
+  <div class="col-12 col-md-5 text-center">
+    <h5 style="font-weight:bold;">{{attendances.1.team_name}}</h5>
+  </div>
+</div>
+
+<form action="{% url 'baseapp:record_results_detail' debate_id %}" method="post" data-debate-id={{ debate_id }}>
+  {% csrf_token %}
+
+  <div class="row mb-4">
+    <div class="col-12 text-center">
+        {% for field in winning_team_form %}
+        <div class="control-group" id="div_id_debate">
+          {{ field.label_tag }}<br>
+          {{ field }}<br>
+          {{ field.errors }}
+        </div>
+        {% endfor %}
+    </div>
+  </div>
+
+  <div class="row">
+    {% for attendance in attendances %}
+    {% with team_counter=forloop.counter %}
+    <div class="col-12 col-md-6">
+
+      <table class="table table-hover table-bordered">
+        <thead class="thead-light">
+          <th class="text-center" colspan=2>{{attendance.team_name}}</th>
+        </thead>
+        <thead class="thead-light">
+          <tr>
+            <th>Speaker</th>
+            <th>Score (0-10)</th>
+          </tr>
+        </thead>
+        {% for speaker in attendance.speakers %}
+        <tr>
+          <th>{{ speaker.name }}</th>
+          <td>
+            {% for field in speaker.score_form %}
+            <div class="control-group" id="div_id_debate">
+              {{ field }}
+              {{ field.errors }}
+            </div>
+            {% endfor %}
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+
+    </div>
+    {% endwith %}
+    {% endfor %}
+  </div>
+
+  <div class="row">
+    <div class="col-12 col-md-6 text-center my-1">
+      <button type="button" name="cancel" class="btn btn-danger btn-block">Cancel</button>
+    </div>
+    <div class="col-12 col-md-6 text-center my-1">
+      <button type="submit" id="id_submit" class="btn btn-primary btn-block">Submit</button>
+    </div>
+  </div>
+</form>
+
+
+<!--
+  success/ failure message goes here
+!-->
+{% if messages %}
+<ul class="messages">
+  {% for message in messages %}
+  <li{% if message.tags %} class="{{ message.tags}}" {% endif %}>
+    {{ message }}
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+
+
+{% endblock %}
+
+{% block body_js %}
+<script>
+  $( document ).ready(function() {
+    var debate_id = $("form").attr("data-debate-id");
+
+    $.ajax({
+      url: "{% url 'baseapp:filter_teams_in_debate' %}",
+      data: {
+        'debate_id': debate_id,
+      },
+      dataType: 'json',
+      success: function(data) {
+        let teams = data.teams;
+        $("#id_winning_team option").hide();
+        for (let i = 0; i < teams.length; i++) {
+          $("#id_winning_team option").filter(function() {
+            return this.value == teams[i];
+          }).show();
+        }
+      }
+    });
+  });
+
+</script>
+{% endblock %}
