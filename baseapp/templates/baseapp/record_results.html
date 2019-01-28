@@ -1,41 +1,16 @@
-{% extends 'base.html' %}
+{% extends 'baseapp/list_debates.html' %}
 {% load static %}
 {% block title %}Record Results - {{block.super}} {% endblock %}
-{% block extra_head %}
-<link rel="stylesheet" type="text/css" href="{% static "baseapp/css/debates.css" %}">
-{% endblock %}
 
-{% block content %}
-<h4>Record Results</h4>
-
-{% for debate in debates %}
-<div class="row py-1">
-  <div class="col-12">
-    <a href="{% url 'baseapp:record_results_detail' debate.id %}">
-      <div class="alert alert-secondary">
-        <div class="row py-2">
-          <div class="col-12 col-sm-5 text-center">
-            <h5>{{ debate.attendance1.team.name }}</h5>
-          </div>
-          <div class="col-12 col-sm-2 text-center">
-            <h5 style="font-weight:bold;">VS</h5>
-          </div>
-          <div class="col-12 col-sm-5 text-center">
-            <h5>{{ debate.attendance2.team.name }}</h5>
-          </div>
-        </div>
-
-        <div class="row py-1">
-          <div class="col-12 text-center">
-            <h6>Judge: {{ debate.judge.name }}</h6>
-          </div>
-        </div>
-      </div>
-    </a>
+{% block before_list %}
+<div class="row my-2">
+  <div class="col-12 text-center">
+    <h4>Record Results</h4>
   </div>
 </div>
 
-{% endfor %}
+<p>Listing all debates for the past week:</p>
 {% endblock %}
 
+{% block detail_link %}{% url 'baseapp:record_results_detail' debate.id %}{% endblock %}
 {% block nav-item %}Record Results{% endblock %}

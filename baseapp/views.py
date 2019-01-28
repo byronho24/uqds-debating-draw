@@ -1,9 +1,9 @@
 from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse, JsonResponse
-from datetime import date, datetime
+from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
+from datetime import date, datetime, timedelta
 from . import allocator
 from .forms import TeamAttendanceForm, TeamSignupForm, DebateResultsForm, ScoreForm
-from .models import Attendance, Speaker, Team, Score, Debate
+from .models import Attendance, Speaker, Team, Score, Debate, _local_time_now
 from django.contrib import messages
 from django.urls import reverse
 from operator import itemgetter
@@ -15,14 +15,14 @@ def index(request):
 
 def debates(request):
 
-    # Check whether debates are already generated
-    debates = Debate.objects.filter(date=date.today())
+    debates = Debate.objects.filter(date=_local_time_now().date())
 
-    if not debates:
+    if request.method == "GET" and request.GET.get('generate_debates'):
         # Generate debates
         # Retrieve all the attendance data for the day
-        attendances = list(Attendance.objects.filter(timestamp__date=date.today()))
+        attendances = list(Attendance.objects.filter(timestamp__date=_local_time_now().date()))
         debates = allocator.generate_debates(attendances)
+        return HttpResponse(request, "Debates generated.")
 
     return render(request, 'baseapp/debates.html', {'debates': debates})
 
@@ -34,18 +34,15 @@ def detail(request, debate_id: int):
     return render(request, 'baseapp/debate_detail.html', context)
 
 def attendanceform(request):
-    # if request.method == "GET":
-    #     # GET requests used for filtering select items
-    #     team_id = request.GET["team"];
-    #     team = Team.objects.get(pk=team_id);
-    #
-    #
     if request.method == 'POST':
-        print(request.POST)
         form = TeamAttendanceForm(request.POST)
         if form.is_valid():
+            if len(form.cleaned_data["speakers"]) > 3:
+                messages.error(request, 'Please select at most 3 speakers.')
+                return HttpResponseRedirect(reverse("baseapp:attendanceform"))
             form.save()
             messages.success(request, 'Your attendance has been marked.')
+            return HttpResponseRedirect(reverse("baseapp:attendanceform"))
 
     form = TeamAttendanceForm()
     context = {
@@ -72,6 +69,8 @@ def signupform(request):
                     speaker.save()
 
             messages.success(request, 'Team signup successful.')
+            return HttpResponseRedirect(reverse("baseapp:signupform"))
+
 
 
     form = TeamSignupForm()
@@ -91,7 +90,7 @@ def table(request):
         sorted_teams.append({
             'name': team.name,
             'wins': team.wins,
-            'speaker_avg_score': team.get_speakers_avg_score(),
+            'speaker_avg_score': "%.2f" % team.get_speakers_avg_score(),
         })
     context = {
         'teams': sorted_teams,
@@ -99,9 +98,10 @@ def table(request):
     return render(request, 'baseapp/table.html', context)
 
 def record_results(request):
-    # Get all the debates for that day
-    # TODO: add selector for date
-    debates = Debate.objects.filter(date=date.today())
+    # Get all the debates for that week
+    today = _local_time_now().date()
+    start_date = today - timedelta(days=6)
+    debates = Debate.objects.filter(date__range=(start_date, today))
     context = {'debates': []}
     for debate in debates:
         context["debates"].append(debate)
@@ -124,14 +124,32 @@ def record_results_detail(request, debate_id: int):
             debate.winning_team = winning_team_form.cleaned_data['winning_team']
             debate.save()
 
+            # Update team wins
+            for team in [debate.attendance1.team, debate.attendance2.team]:
+                wins = Debate.objects.filter(winning_team=team).count()
+                team.wins = wins
+                team.save()
+
+            # Update team judged_before
+            Team.objects.filter(pk=debate.judge.team.id).update(judged_before=True)
+
             # Record speaker's scores
             for sf in speaker_score_forms:
-                sf.save()
+                # Update if score object already exists, else create
+                obj, created = Score.objects.update_or_create(
+                    debate = sf.cleaned_data["debate"],
+                    speaker = sf.cleaned_data["speaker"],
+                    defaults={
+                        'score': sf.cleaned_data["score"]
+                    }
+                )
 
             messages.success(request, "Results for this debate are successfully recorded.")
+            return HttpResponseRedirect(reverse("baseapp:record_results_detail", args=[debate_id]))
 
         else:
             messages.error(request, "Form details invalid. Please try again.")
+
     # Add speaker score forms
     attendances = []
     for attendance in [debate.attendance1, debate.attendance2]:
@@ -148,13 +166,18 @@ def record_results_detail(request, debate_id: int):
                     initial={
                         'speaker': speaker.id,
                         'debate': debate.id,
+                        'score': speaker.score_set.get(debate=debate).score \
+                                    if Score.objects.filter(speaker=speaker, debate=debate).exists() \
+                                    else None
                 })
             })
         attendances.append(team)
 
     context = {
         'debate_id': debate.id,
-        'winning_team_form': DebateResultsForm(),
+        'winning_team_form': DebateResultsForm(initial={
+            'winning_team': debate.winning_team if debate.winning_team is not None else None
+        }),
         'attendances': attendances,
     }
 

@@ -1,27 +1,39 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
 {% block title %}{{ block.super }}{% endblock %}
+
 {% block content %}
 
+<div class="row">
+  <div class="col-12 text-center">
     <h4>{% block form_heading %}{% endblock %}</h4>
-    <form class="form" method="post">
-      {% csrf_token %}
-      {% block form %}
-        {{ form|crispy }}
-      {% endblock %}
-      <button type="submit" id="id_submit" class="btn btn-primary">Submit</button>
-    </form>
-    <!--
-      success/ failure message goes here
-    !-->
-    {% if messages %}
-    <ul class="messages">
-      {% for message in messages %}
-      <li{% if message.tags %} class="{{ message.tags}}" {% endif %}>
-        {{ message }}
-      </li>
-      {% endfor %}
-    </ul>
-    {% endif %}
+  </div>
+</div>
+
+<!--
+  success/ failure message goes here
+!-->
+{% if messages %}
+  {% for message in messages %}
+  <div class="alert alert-{{ message.tags }} alert-dismissable fade show" role="alert">
+    {{ message|safe }}
+    <button type="button" class="close" data-dismiss="alert" arai-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  {% endfor %}
+</ul>
+{% endif %}
+
+{% block before_form %}{% endblock %}
+
+<form class="form" method="post">
+  {% csrf_token %}
+  {% block form %}
+    {{ form|crispy }}
+  {% endblock %}
+  <button type="submit" id="id_submit" class="btn btn-primary">Submit</button>
+</form>
+
 
 {% endblock %}

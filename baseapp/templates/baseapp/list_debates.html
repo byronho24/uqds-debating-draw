@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} {{block.super}} {% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'baseapp/css/debates.css' %}">
+{% endblock %}
+
+{% block content %}
+
+{% block before_list %}{% endblock %}
+
+{% if debates %}
+{% for debate in debates %}
+<div class="row py-1">
+  <div class="col-12">
+    <a href="{% block detail_link %}{% endblock %}">
+      <button type="button" class="btn btn-block btn-light listitem" style="border-color: #aaa">
+        <div class="row py-2">
+          <div class="col-12 col-sm-5 text-center">
+            <h5>{{ debate.attendance1.team.name }}</h5>
+          </div>
+          <div class="col-12 col-sm-2 text-center">
+            <h5 style="font-weight:bold;">VS</h5>
+          </div>
+          <div class="col-12 col-sm-5 text-center">
+            <h5>{{ debate.attendance2.team.name }}</h5>
+          </div>
+        </div>
+
+        <div class="row py-1">
+          <div class="col-12 text-center">
+            <h6>Judge: {{ debate.judge.name }}</h6>
+          </div>
+        </div>
+      </button>
+    </a>
+  </div>
+</div>
+
+{% endfor %}
+{% endif %}
+{% endblock %}

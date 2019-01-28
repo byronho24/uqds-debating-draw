@@ -2,53 +2,38 @@
 {% block title %} Debate Details - {{ block.super }} {% endblock %}
 
 {% block content %}
+<a href="{% url 'baseapp:debates' %}">
+  <button type="button" class="btn btn-lg btn-outline-secondary" aria-label="Back">
+    <i class="fa fa-chevron-left"></i>
+  </button>
+</a>
 
-  <div class="row">
-    <div class="col-sm-6">
-      <div class="row">
-        <div class="col-12 text-center">
-          <h4>{{ debate.attendance1.team.name }}</h4>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-12">
-          <table>
-            <tr>
-              <th>Attending Speakers:</th>
-            </tr>
-            {% for speaker in debate.attendance1.speakers.all %}
-            <tr>
-              <td>{{ speaker.name }}</td>
-            </tr>
-            {% endfor %}
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-sm-6">
-      <div class="row">
-        <div class="col-12 text-center">
-          <h4>{{ debate.attendance2.team.name }}</h4>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-12">
-          <table>
-            <tr>
-              <th>Attending Speakers:</th>
-            </tr>
-            {% for speaker in debate.attendance2.speakers.all %}
-            <tr>
-              <td>{{ speaker.name }}</td>
-            </tr>
-            {% endfor %}
-          </table>
-        </div>
-      </div>
-    </div>
+<div class="row my-2">
+  <div class="col-6">
+    <table>
+      <tr>
+        <th>Attending Speakers:</th>
+      </tr>
+      {% for speaker in debate.attendance1.speakers.all %}
+      <tr>
+        <td>{{ speaker.name }}</td>
+      </tr>
+      {% endfor %}
+    </table>
   </div>
+
+  <div class="col-6">
+    <table>
+      <tr>
+        <th>Attending Speakers:</th>
+      </tr>
+      {% for speaker in debate.attendance2.speakers.all %}
+      <tr>
+        <td>{{ speaker.name }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+</div>
 
 {% endblock %}

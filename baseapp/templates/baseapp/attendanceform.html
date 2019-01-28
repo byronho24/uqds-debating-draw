@@ -21,5 +21,35 @@
 {% block nav-item %}attendanceform{% endblock %}
 
 {% block body_js %}
-<script src="{% static "baseapp/js/attendanceform.js" %}"></script>
+<script>
+$(document).ready(function() {
+    $("#id_team").change(function() {
+        // show the speakers, want_to_judge, and submit button
+        $("#div_id_speakers").show(500);
+        $("#div_id_want_to_judge").show(500);
+        $("#id_submit").show(500);
+    });
+});
+
+$("#id_team").on('change', function() {
+  var team_id = $(this).val();
+
+  $.ajax({
+    url: '{% url 'baseapp:filter_speakers_in_team'}',
+    data: {
+      'team_id': team_id
+    },
+    dataType: 'json',
+    success: function(data) {
+      let speakers = data.speakers;
+      $('#id_speakers option').hide();
+      for (let i = 0; i < speakers.length; i++) {
+        $('#id_speakers option').filter(function() {
+          return this.value == speakers[i];
+        }).show();
+      }
+    }
+  });
+});
+</script>
 {% endblock %}

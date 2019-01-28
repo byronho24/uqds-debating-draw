@@ -92,7 +92,6 @@ class Speaker(models.Model):
 
 class Attendance(models.Model):
 
-
     timestamp = models.DateTimeField('timestamp', default=_local_time_now)
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
     speakers = models.ManyToManyField(Speaker)
@@ -117,6 +116,7 @@ class Debate(models.Model):
 
 
 class Score(models.Model):
+
     speaker = models.ForeignKey(Speaker, on_delete=models.CASCADE)
     score = models.DecimalField(max_digits=2, decimal_places=1, blank=False,
                                     validators=[

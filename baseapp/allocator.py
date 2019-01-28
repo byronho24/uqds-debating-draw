@@ -84,6 +84,10 @@ def _matchmake(attendances_competing: List[Attendance], judges: List[Speaker]):
     attendances_competing = [item[2] for item in sorting_list]
     debates = []
 
+    # Clear any existing debates for the day
+    Debate.objects.filter(date=_local_time_now().date()).delete()
+
+    # Generate the debate objects
     for i in range(0, _number_of_debates(attendances_competing)):
         debate = Debate()
         debate.date = _local_time_now().date()
