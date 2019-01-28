@@ -35,7 +35,7 @@ $("#id_team").on('change', function() {
   var team_id = $(this).val();
 
   $.ajax({
-    url: '{% url 'baseapp:filter_speakers_in_team'}',
+    url: '{% url 'baseapp:filter_speakers_in_team' %}',
     data: {
       'team_id': team_id
     },
