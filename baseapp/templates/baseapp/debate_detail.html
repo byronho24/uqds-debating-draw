@@ -14,7 +14,7 @@
       <tr>
         <th>Attending Speakers:</th>
       </tr>
-      {% for speaker in debate.attendance1.speakers.all %}
+      {% for speaker in team1.speakers %}
       <tr>
         <td>{{ speaker.name }}</td>
       </tr>
@@ -27,7 +27,7 @@
       <tr>
         <th>Attending Speakers:</th>
       </tr>
-      {% for speaker in debate.attendance2.speakers.all %}
+      {% for speaker in team2.speakers %}
       <tr>
         <td>{{ speaker.name }}</td>
       </tr>

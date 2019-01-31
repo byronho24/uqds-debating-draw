@@ -90,22 +90,8 @@ class Speaker(models.Model):
         return score > self.JUDGE_THRESHOLD
 
 
-class Attendance(models.Model):
-
-    timestamp = models.DateTimeField('timestamp', default=_local_time_now)
-    team = models.ForeignKey(Team, on_delete=models.CASCADE)
-    speakers = models.ManyToManyField(Speaker)
-    want_to_judge = models.BooleanField(default=True)
-
-
-    def __str__(self):
-        return f"{self.timestamp.strftime(TIME_FORMAT)}  {self.team.name}"
-
-
 class Debate(models.Model):
     date = models.DateField()
-    attendance1 = models.ForeignKey(Attendance, null=True, related_name='attendance1', on_delete=models.CASCADE)
-    attendance2 = models.ForeignKey(Attendance, null=True, related_name='attendance2', on_delete=models.CASCADE)
     judge = models.ForeignKey(Speaker, null=True, on_delete=models.SET_NULL)
     winning_team = models.ForeignKey(Team, null=True, blank=False,
                                         default=None, on_delete=models.CASCADE)
@@ -114,6 +100,18 @@ class Debate(models.Model):
     def __str__(self):
         return f"{self.date}"
 
+
+class Attendance(models.Model):
+
+    timestamp = models.DateTimeField('timestamp', default=_local_time_now)
+    team = models.ForeignKey(Team, on_delete=models.CASCADE)
+    speakers = models.ManyToManyField(Speaker)
+    want_to_judge = models.BooleanField(default=True)
+    debate = models.ForeignKey(Debate, null=True, on_delete=models.SET_NULL, default=None)
+
+
+    def __str__(self):
+        return f"{self.timestamp.strftime(TIME_FORMAT)}  {self.team.name}"
 
 class Score(models.Model):
 

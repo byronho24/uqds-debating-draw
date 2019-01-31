@@ -42,11 +42,11 @@ $("#id_team").on('change', function() {
     dataType: 'json',
     success: function(data) {
       let speakers = data.speakers;
-      $('#id_speakers option').hide();
+      $('#id_speakers option').prop("disabled", true).hide();
       for (let i = 0; i < speakers.length; i++) {
         $('#id_speakers option').filter(function() {
           return this.value == speakers[i];
-        }).show();
+        }).prop("disabled", false).show();
       }
     }
   });

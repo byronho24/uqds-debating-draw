@@ -14,30 +14,77 @@
 {% for debate in debates %}
 <div class="row py-1">
   <div class="col-12">
-    <a href="{% block detail_link %}{% endblock %}">
-      <button type="button" class="btn btn-block btn-light listitem" style="border-color: #aaa">
-        <div class="row py-2">
-          <div class="col-12 col-sm-5 text-center">
-            <h5>{{ debate.attendance1.team.name }}</h5>
-          </div>
-          <div class="col-12 col-sm-2 text-center">
-            <h5 style="font-weight:bold;">VS</h5>
-          </div>
-          <div class="col-12 col-sm-5 text-center">
-            <h5>{{ debate.attendance2.team.name }}</h5>
-          </div>
+    <button type="button" class="btn btn-block btn-light accordion" style="border-color: #aaa">
+      <div class="row py-2">
+        <div class="col-12 col-sm-5 text-center">
+          <h5>{{ debate.team1.name }}</h5>
+        </div>
+        <div class="col-12 col-sm-2 text-center">
+          <h5 style="font-weight:bold;">VS</h5>
+        </div>
+        <div class="col-12 col-sm-5 text-center">
+          <h5>{{ debate.team2.name }}</h5>
+        </div>
+      </div>
+
+      <div class="row py-1">
+        <div class="col-12 text-center">
+          <h6>Judge: {{ debate.judge_name }}</h6>
+        </div>
+      </div>
+    </button>
+
+    <div class="panel">
+      <div class="row my-2">
+        <div class="col-6">
+          <table>
+            <tr>
+              <th>Attending Speakers:</th>
+            </tr>
+            {% for speaker in debate.team1.speakers %}
+            <tr>
+              <td>{{ speaker.name }}</td>
+            </tr>
+            {% endfor %}
+          </table>
         </div>
 
-        <div class="row py-1">
-          <div class="col-12 text-center">
-            <h6>Judge: {{ debate.judge.name }}</h6>
-          </div>
+        <div class="col-6 text-right">
+          <table class="ml-auto">
+            <tr>
+              <th>Attending Speakers:</th>
+            </tr>
+            {% for speaker in debate.team2.speakers %}
+            <tr>
+              <td>{{ speaker.name }}</td>
+            </tr>
+            {% endfor %}
+          </table>
         </div>
-      </button>
-    </a>
+      </div>
+    </div>
   </div>
 </div>
 
 {% endfor %}
 {% endif %}
+{% endblock %}
+
+{% block body_js %}
+<script>
+  var acc = document.getElementsByClassName("accordion");
+  var i;
+
+  for (i = 0; i < acc.length; i++) {
+    acc[i].addEventListener("click", function() {
+      this.classList.toggle("active");
+      var panel = this.nextElementSibling;
+      if (panel.style.maxHeight){
+        panel.style.maxHeight = null;
+      } else {
+        panel.style.maxHeight = panel.scrollHeight + "px";
+      }
+    });
+  }
+</script>
 {% endblock %}

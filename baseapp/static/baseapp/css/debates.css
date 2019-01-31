@@ -3,6 +3,13 @@ a, a:hover{
   color: currentcolor;
 }
 
-.accordion-panel {
+.accordion {
+  transition: 0.4s;
+  cursor: pointer;
+}
 
+.panel {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.2s ease-out;
 }

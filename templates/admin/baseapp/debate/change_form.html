@@ -1,0 +1,60 @@
+{% extends 'admin/change_form.html' %}
+
+{% block admin_change_form_document_ready %}
+{{ block.super }}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script>
+  $( document ).ready(function() {
+
+    var debate_id = "{{ original.id }}";
+
+    $.ajax({
+      url: "{% url 'baseapp:filter_debate_details' %}",
+      data: {
+        'debate_id': debate_id,
+      },
+      dataType: 'json',
+      success: function(data) {
+        let teams = data.teams;
+        $("#id_winning_team option").hide();
+        for (let i = 0; i < teams.length; i++) {
+          $("#id_winning_team option").filter(function() {
+            return this.value == teams[i];
+          }).show();
+        }
+
+        let speakers = data.speakers;
+        console.log(speakers);
+        // Replace Speaker select column with a read only header column
+        table_header_row = $("#debate_form #score_set-group").find("thead").find('tr');
+        table_header_row.prepend(
+          "<th class='required'>Speaker</th>"
+        );
+        // Add speaker team column
+        table_header_row.prepend(
+          "<th class='required'>Team</th>"
+        );
+        // Remove existing Speaker column header
+        table_header_row.find("th").eq(3).empty();
+
+        for (let i = 0; i < speakers.length; i++){
+          let row = $("#score_set-" + i);
+          // Hide text in table col of class original if content exists
+          row.find(".original").find("p").remove();
+          // Set speakers in the select boxes
+          row.find(".field-speaker").find("select").val(speakers[i].id);
+          // Hide speaker select box
+          row.find(".field-speaker").find("div").hide();
+          // Add read-only speaker header column
+          row.prepend("<th style='vertical-align: middle;'>" + speakers[i].name + "</th>");
+          // Add team column
+          row.prepend("<th style='vertical-align: middle;'>" + speakers[i].team + "</th>");
+
+        }
+
+      }
+    });
+  });
+
+</script>
+{% endblock %}

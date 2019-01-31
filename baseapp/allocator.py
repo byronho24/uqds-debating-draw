@@ -71,7 +71,7 @@ def _matchmake(attendances_competing: List[Attendance], judges: List[Speaker]):
 
     :param attendances_competing: Attendances to assign competitions for
     :param judges: Available judges for the day
-    :return: List of Debate objects
+    :return: QuerySet of Debate objects
 
     """
     # TODO: account for vetoes
@@ -92,13 +92,16 @@ def _matchmake(attendances_competing: List[Attendance], judges: List[Speaker]):
         debate = Debate()
         debate.date = _local_time_now().date()
         debate.judge = judges[i]
-        debate.attendance1 = attendances_competing[i*2]
-        debate.attendance2 = attendances_competing[i*2+1]
         debate.save()
 
-        debates.append(debate)
+        # Set the debate for the attendances
+        attendance1 = attendances_competing[i*2]
+        attendance2 = attendances_competing[i*2+1]
+        for attendance in [attendance1, attendance2]:
+            attendance.debate = debate
+            attendance.save()
 
-    return debates
+    return Debate.objects.filter(date=_local_time_now().date())
 
 def generate_debates(attendances: List[Attendance]) -> List[Debate]:
     """

@@ -18,7 +18,7 @@
 
 {% endblock %}
 
-{% block detail_link %}{% url 'baseapp:debate_detail' debate.id %}{% endblock %}
+{% block detail_link %}{% url 'baseapp:debate_detail' debate.debate_id %}{% endblock %}
 
 {% block nav-item %}debates{% endblock %}
 
@@ -31,4 +31,5 @@
       });
   });
 </script>
+{{ block.super }}
 {% endblock %}
