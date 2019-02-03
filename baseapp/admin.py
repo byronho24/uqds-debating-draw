@@ -59,6 +59,7 @@ class MyDebateAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
+
         # Post-save --> update team wins
         for attendance in obj.attendance_set.all():
             team = attendance.team
@@ -66,10 +67,12 @@ class MyDebateAdmin(admin.ModelAdmin):
             team.wins = wins
             team.save()
 
+        # Update team judged_before
+        Team.objects.filter(pk=obj.judge.team.id).update(judged_before=True)
 
 class MySpeakerAdmin(admin.ModelAdmin):
-    inlines = [ScoreInstanceInlineForSpeaker]
-    list_display = ("name", "team",)
+    # inlines = [ScoreInstanceInlineForSpeaker]
+    list_display = ("name", "team", "judge_qualification_score")
 
 class MyScoreAdmin(admin.ModelAdmin):
     list_display = ('speaker', 'debate')

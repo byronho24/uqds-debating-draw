@@ -54,7 +54,7 @@ class Speaker(models.Model):
         'WUDCBreak': 100
     }
 
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=50)
     team = models.ForeignKey(Team, blank=True, null=True,
     on_delete=models.SET_NULL)
     state_team = models.BooleanField(default=False)
@@ -64,6 +64,7 @@ class Speaker(models.Model):
     australs_break = models.BooleanField(default=False)
     awdc_break = models.BooleanField(default=False)
     wudc_break = models.BooleanField(default=False)
+    judge_qualification_score = models.IntegerField(editable=False, default=0)
 
     def __str__(self):
         return self.name
@@ -78,7 +79,7 @@ class Speaker(models.Model):
         avg /= len(scores)
         return avg
 
-    def is_qualified_as_judge(self) -> bool:
+    def _get_judge_qualification_score(self) -> int:
         score = 0
         score += self.state_team * self.WEIGHTS['StateTeam'] + \
                  self.pro * self.WEIGHTS['Pro'] + \
@@ -87,7 +88,11 @@ class Speaker(models.Model):
                  self.australs_break * self.WEIGHTS['AustralsBreak'] + \
                  self.awdc_break * self.WEIGHTS['AWDCBreak'] + \
                  self.wudc_break * self.WEIGHTS['WUDCBreak']
-        return score > self.JUDGE_THRESHOLD
+        return score
+
+    def save(self, *args, **kwargs):
+        self.judge_qualification_score = self._get_judge_qualification_score()
+        super().save(*args, **kwargs)
 
 
 class Debate(models.Model):
@@ -105,7 +110,7 @@ class Attendance(models.Model):
     timestamp = models.DateTimeField('timestamp', default=_local_time_now)
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
     speakers = models.ManyToManyField(Speaker)
-    want_to_judge = models.BooleanField(default=True)
+    want_to_judge = models.BooleanField(default=False)
     debate = models.ForeignKey(Debate, null=True, on_delete=models.SET_NULL, default=None)
 
 

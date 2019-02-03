@@ -20,6 +20,7 @@ def debates(request):
     if request.method == "GET" and request.GET.get('generate_debates'):
         # Generate debates
         # Retrieve all the attendance data for the day
+        # TODO: set deadline time?
         attendances = list(Attendance.objects.filter(timestamp__date=_local_time_now().date()))
         debates = allocator.generate_debates(attendances)
         return HttpResponse(request, "Debates generated.")

@@ -12,7 +12,13 @@ WEIGHTS = {
     'one_present': 12
 }
 
-def _assign_judging_score(attendance: Attendance):
+# Judge qualification threshold
+JUDGE_THRESHOLD = 10
+
+def is_qualified_as_judge(speaker: Speaker):
+    return speaker.judge_qualification_score >= JUDGE_THRESHOLD
+
+def _assign_team_judging_score(attendance: Attendance):
     # Get data from attendance
     number_attending = len(attendance.speakers.all())
     never_judged = not attendance.team.judged_before
@@ -48,22 +54,30 @@ def _assign_competing_teams(attendances: List[Attendance]):
         attendances_dict[attendance.team.id] = attendance
     attendances = list(attendances_dict.values())
 
+    print("Want to judge")
+    for attendance in Attendance.objects.filter(want_to_judge=True).all():
+        for speaker in attendance.speakers.all():
+            print(speaker)
     # FIXME: algo to account for qualified judges
-    judges = []
+    qualified_judges = []
+    judges = 0
 
     # Sort teams based on judging score
-    attendances = sorted(attendances, key=_assign_judging_score, reverse=True)
+    attendances = sorted(attendances, key=_assign_team_judging_score, reverse=True)
 
-    # Pop until we have enough judges
-    while len(judges) <  _number_of_debates(attendances) or len(attendances) % 2 != 0 :
+    # Pop until we have enough qualified judges
+    while len(qualified_judges) <  _number_of_debates(attendances) or len(attendances) % 2 != 0 :
         # Pop one team
         judging_attendance = attendances.pop(0)
         for judge in judging_attendance.speakers.all():
-            judges.append(judge)
+            judges += 1
+            if is_qualified_as_judge(judge):
+                qualified_judges.append(judge)
 
-    # TODO: for teams that are judging, set their judged_before to True
-    # Or do we do that after the match?
-    return ([attendance for attendance in attendances], judges)
+    print(f"Debates: { _number_of_debates(attendances)}")
+    print(f"Judges: {judges}")
+    print(f"Qualified judges: {len(qualified_judges)}")
+    return ([attendance for attendance in attendances], qualified_judges)
 
 def _matchmake(attendances_competing: List[Attendance], judges: List[Speaker]):
     """
