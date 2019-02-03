@@ -12,7 +12,7 @@ def _local_time_now():
 class Australia_Brisbane(tzinfo):
     """ Timezone for Australia/Brisbane """
     def utcoffset(self, dt):
-        return timedelta(minutes=600)
+        return timedelta(hours=10)
 
     def tzname(self, dt):
         return "Australia/Brisbane"
@@ -23,8 +23,8 @@ class Australia_Brisbane(tzinfo):
 class Team(models.Model):
 
     name = models.CharField(max_length=200, unique=True)
-    wins = models.IntegerField(default=0)
     judged_before = models.BooleanField(default=False)
+    wins = models.IntegerField(default=0)
 
     def get_speakers_avg_score(self):
         avg = 0
@@ -39,7 +39,7 @@ class Team(models.Model):
     def __str__(self):
         return self.name
 
-# TODO: add field for storing the scores
+
 class Speaker(models.Model):
 
     JUDGE_THRESHOLD = 10
@@ -95,7 +95,6 @@ class Debate(models.Model):
     judge = models.ForeignKey(Speaker, null=True, on_delete=models.SET_NULL)
     winning_team = models.ForeignKey(Team, null=True, blank=False,
                                         default=None, on_delete=models.CASCADE)
-    # TODO: if delete team in tournament how should that be handled?
 
     def __str__(self):
         return f"{self.date}"

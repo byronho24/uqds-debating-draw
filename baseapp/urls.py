@@ -10,8 +10,6 @@ urlpatterns = [
     path('signupform/', views.signupform, name='signupform'),
     path('attendanceform/', views.attendanceform, name='attendanceform'),
     path('table/', views.table, name='table'),
-    path('record-results/', views.record_results, name='record_results'),
-    path('record-results/<int:debate_id>/', views.record_results_detail, name="record_results_detail"),
     path('ajax/filter_speakers_in_team/', views.filter_speakers_in_team, name="filter_speakers_in_team"),
     path('ajax/filter_debate_details', views.filter_debate_details, name="filter_debate_details"),
 ]
