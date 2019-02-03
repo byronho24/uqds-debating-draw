@@ -58,13 +58,13 @@ class MyDebateAdmin(admin.ModelAdmin):
         return obj.attendance_set.all()[1].team.name
 
     def save_model(self, request, obj, form, change):
-        super.save_model(request, obj, form, change)
+        super().save_model(request, obj, form, change)
         # Post-save --> update team wins
         for attendance in obj.attendance_set.all():
-                team = attendance.team
-                wins = Debate.objects.filter(winning_team=team).count()
-                team.wins = wins
-                team.save()
+            team = attendance.team
+            wins = Debate.objects.filter(winning_team=team).count()
+            team.wins = wins
+            team.save()
 
 
 class MySpeakerAdmin(admin.ModelAdmin):
