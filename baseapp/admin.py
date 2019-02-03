@@ -45,7 +45,7 @@ class MyTeamAdmin(admin.ModelAdmin):
 class MyDebateAdmin(admin.ModelAdmin):
 
     list_display = ('date',
-        #'team1', 'team2'
+        'team1', 'team2'
     )
     list_filter = ('date',)
     readonly_fields = ("date", "judge")
