@@ -40,6 +40,7 @@ class SpeakerInstanceInline(admin.TabularInline):
     can_delete = False
 
 class MyTeamAdmin(admin.ModelAdmin):
+    list_display = ("name", "count_qualified_judges")
     inlines = [SpeakerInstanceInline]
 
 class MyDebateAdmin(admin.ModelAdmin):
@@ -73,13 +74,14 @@ class MyDebateAdmin(admin.ModelAdmin):
 class MySpeakerAdmin(admin.ModelAdmin):
     # inlines = [ScoreInstanceInlineForSpeaker]
     list_display = ("name", "team", "judge_qualification_score")
+    list_filter = ("team",)
 
 class MyScoreAdmin(admin.ModelAdmin):
     list_display = ('speaker', 'debate')
 
 
 class MyAttendanceAdmin(admin.ModelAdmin):
-    list_display = ("timestamp", "team")
+    list_display = ("timestamp", "team", "count_qualified_judges")
     list_filter = ("timestamp", "team")
 
 class MyAdminSite(admin.AdminSite):

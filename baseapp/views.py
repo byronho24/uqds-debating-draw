@@ -3,7 +3,8 @@ from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from datetime import date, datetime, timedelta
 from . import allocator
 from .forms import TeamAttendanceForm, TeamSignupForm, DebateResultsForm, ScoreForm
-from .models import Attendance, Speaker, Team, Score, Debate, _local_time_now
+from .models import Attendance, Speaker, Team, Score, Debate
+from .exceptions import NotEnoughJudgesException
 from django.contrib import messages
 from django.urls import reverse
 from operator import itemgetter
@@ -14,20 +15,26 @@ def index(request):
     return render(request, 'baseapp/index.html')
 
 def debates(request):
-
-    debates = Debate.objects.filter(date=_local_time_now().date())
-
-    if request.method == "GET" and request.GET.get('generate_debates'):
-        # Generate debates
-        # Retrieve all the attendance data for the day
-        # TODO: set deadline time?
-        attendances = list(Attendance.objects.filter(timestamp__date=_local_time_now().date()))
-        debates = allocator.generate_debates(attendances)
-        return HttpResponse(request, "Debates generated.")
+    try:
+        debates = allocator.get_or_generate_debates(Attendance.objects.filter(timestamp__date=datetime.today()))
+    except NotEnoughJudgesException as nej:
+        debates = []
+        messages.error(request, str(nej))
 
     context = {
         'debates': []
     }
+
+    if request.method == "GET" and request.GET.get('generate_debates'):
+        # Force regenerate debates
+        # TODO: set deadline time?
+        attendances = list(Attendance.objects.filter(timestamp__date=datetime.today()))
+        try:
+            debates = allocator.generate_debates(attendances)
+        except NotEnoughJudgesException as nej:
+            debates = []
+            messages.error(request, str(nej))
+        return HttpResponse(request, "Debates generated.")
 
     for debate in debates:
         attendances = debate.attendance_set.all()
@@ -131,7 +138,7 @@ def table(request):
 
 def record_results(request):
     # Get all the debates for that week
-    today = _local_time_now().date()
+    today = datetime.today()
     start_date = today - timedelta(days=6)
     debates = Debate.objects.filter(date__range=(start_date, today))
     context = {'debates': []}
@@ -228,7 +235,7 @@ def filter_speakers_in_team(request):
     return JsonResponse(data)
 
 def filter_debate_details(request):
-    debate_id = request.GET.get('debate_id', None);
+    debate_id = request.GET.get('debate_id', None)
     data = {
         'teams': [],
         'speakers': []

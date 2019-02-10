@@ -4,21 +4,14 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 
-def _local_time_now():
-    # FIXME: timezone conversion hardcoded for now - tried to implement the
-    # tzinfo class (as you can see below ) but for some reason it didn't work
-    return datetime.utcnow() + timedelta(hours=10)
-
-class Australia_Brisbane(tzinfo):
-    """ Timezone for Australia/Brisbane """
+class BNE(tzinfo):
     def utcoffset(self, dt):
         return timedelta(hours=10)
-
     def tzname(self, dt):
         return "Australia/Brisbane"
-
     def dst(self, dt):
         return timedelta(0)
+
 
 class Team(models.Model):
 
@@ -35,6 +28,9 @@ class Team(models.Model):
             avg += speaker.get_avg_score()
         avg /= len(speakers)
         return avg
+
+    def count_qualified_judges(self):
+        return sum(1 for speaker in self.speaker_set.all() if speaker.is_qualified_as_judge())
 
     def __str__(self):
         return self.name
@@ -94,6 +90,9 @@ class Speaker(models.Model):
         self.judge_qualification_score = self._get_judge_qualification_score()
         super().save(*args, **kwargs)
 
+    def is_qualified_as_judge(self):
+        return self.judge_qualification_score >= self.JUDGE_THRESHOLD
+
 
 class Debate(models.Model):
     date = models.DateField()
@@ -107,12 +106,14 @@ class Debate(models.Model):
 
 class Attendance(models.Model):
 
-    timestamp = models.DateTimeField('timestamp', default=_local_time_now)
+    timestamp = models.DateTimeField('timestamp', default=datetime.now)
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
     speakers = models.ManyToManyField(Speaker)
     want_to_judge = models.BooleanField(default=False)
     debate = models.ForeignKey(Debate, null=True, on_delete=models.SET_NULL, default=None)
 
+    def count_qualified_judges(self):
+        return sum(1 for speaker in self.speakers.all() if speaker.is_qualified_as_judge())
 
     def __str__(self):
         return f"{self.timestamp.strftime(TIME_FORMAT)}  {self.team.name}"
