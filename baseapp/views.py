@@ -77,7 +77,7 @@ def attendanceform(request):
         form = TeamAttendanceForm(request.POST)
         if form.is_valid():
             if len(form.cleaned_data["speakers"]) > 3:
-                messages.error(request, 'Please select at most 3 speakers.')
+                messages.error(request, 'Please select up to 3 speakers.')
                 return HttpResponseRedirect(reverse("baseapp:attendanceform"))
             form.save()
             messages.success(request, 'Your attendance has been marked.')
@@ -96,21 +96,32 @@ def signupform(request):
         if form.is_valid():
             team_name = form.cleaned_data['name']
             speakers = form.cleaned_data['speakers']
-
+                
+            if len(speakers) > Team.MAX_SPEAKERS:
+                messages.error(request, "Please select up to 5 speakers.")
+                return HttpResponseRedirect(reverse("baseapp:signupform"))
+            
             # Create team
             team = Team(name = team_name)
             team.save()
 
             # Assign team to speakers
-            for speaker in speakers:
-                if speaker is not None:
-                    speaker.team = team
-                    speaker.save()
+            for speaker_id in speakers:
+                try:
+                    id = int(speaker_id)
+                except TypeError:
+                    messages.error(request, "An error occurred - please try again later.")
+                    return HttpResponseRedirect(reverse("baseapp:signupform"))
+                
+                speaker = Speaker.objects.get(pk=id)
+                speaker.team = team
+                speaker.save()
 
             messages.success(request, 'Team signup successful.')
             return HttpResponseRedirect(reverse("baseapp:signupform"))
-
-
+        
+        else:
+            messages.error(request, "Form invalid - either no speakers were selected or team name has already been taken.")
 
     form = TeamSignupForm()
     return render(request, 'baseapp/signupform.html', {'form': form})

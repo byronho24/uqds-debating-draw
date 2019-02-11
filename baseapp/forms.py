@@ -1,7 +1,6 @@
 from django import forms
 from .models import Attendance, Speaker, Team, Debate, Score
-from searchableselect.widgets import SearchableSelect
-
+from ajax_select.fields import AutoCompleteSelectMultipleField
 
 class TeamAttendanceForm(forms.ModelForm):
 
@@ -22,10 +21,13 @@ class TeamSignupForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.fields['speakers'] = forms.ModelMultipleChoiceField(
-            queryset=Speaker.objects.filter(team__isnull=True),
-        )
+        self.fields['speakers'] = AutoCompleteSelectMultipleField('speakers_team_signup', required=True)
         # Only speakers that are not in any team are available for selection
+        self.fields['speakers'].help_text = \
+            "<p id='speakersHelp' class='form-text text-muted'>" + \
+            "Start typing to search for speakers by their name.<br>" + \
+            "Only speakers that are already members of UQDS and are not already in a team are available for selection." + \
+            "</p>"
 
 class DebateResultsForm(forms.ModelForm):
 

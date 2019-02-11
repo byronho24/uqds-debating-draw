@@ -15,6 +15,8 @@ class BNE(tzinfo):
 
 class Team(models.Model):
 
+    MAX_SPEAKERS = 5
+
     name = models.CharField(max_length=200, unique=True)
     judged_before = models.BooleanField(default=False)
     wins = models.IntegerField(default=0)

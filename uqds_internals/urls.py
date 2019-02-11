@@ -15,9 +15,10 @@ Including another URLconf
 """
 from baseapp.admin import admin_site
 from django.urls import path, include
+from ajax_select import urls as ajax_select_urls
 
 urlpatterns = [
     path('admin/', admin_site.urls),
     path('', include('baseapp.urls')),
-    path('searchableselect/', include('searchableselect.urls')),
+    path('ajax_select/', include(ajax_select_urls)),
 ]

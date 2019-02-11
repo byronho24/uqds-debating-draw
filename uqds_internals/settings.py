@@ -35,9 +35,9 @@ INSTALLED_APPS = [
     # My apps
     'baseapp.apps.BaseAppConfig',
     # Third-party apps
-    'searchableselect',
     'crispy_forms',
     'widget_tweaks',
+    'ajax_select',
     # Django default
     'django.contrib.admin',
     'django.contrib.auth',
