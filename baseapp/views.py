@@ -37,16 +37,16 @@ def debates(request):
         return HttpResponse(request, "Debates generated.")
 
     for debate in debates:
-        attendances = debate.attendance_set.all()
+
         context['debates'].append({
             'debate_id': debate.id,
             'team1': {
-                'name': attendances[0].team.name,
-                'speakers': attendances[0].speakers.all()
+                'name': debate.attendance1.team.name,
+                'speakers': debate.attendance1.speakers.all()
             },
             'team2': {
-                'name': attendances[1].team.name,
-                'speakers': attendances[1].speakers.all()
+                'name': debate.attendance2.team.name,
+                'speakers': debate.attendance2.speakers.all()
             },
             'judge_name': debate.judge.name
         })
@@ -57,17 +57,16 @@ def detail(request, debate_id: int):
     # return HttpResponse(f"You are looking at debate {debate_id}.")
     # Get debate based on debate_id
     debate = get_object_or_404(Debate, pk=debate_id)
-    attendances = debate.attendance_set.all()
 
     context = {
         'debate_id': debate.id,
         'team1': {
-            'name': attendances[0].team.name,
-            'speakers': attendances[0].team.speaker_set.all()
+            'name': debate.attendance1.team.name,
+            'speakers': debate.attendance1.team.speaker_set.all()
         },
         'team2': {
-            'name': attendances[1].team.name,
-            'speakers': attendances[1].team.speaker_set.all()
+            'name': debate.attendance2.team.name,
+            'speakers': debate.attendance2.team.speaker_set.all()
         },
     }
     return render(request, 'baseapp/debate_detail.html', context)
@@ -175,7 +174,7 @@ def record_results_detail(request, debate_id: int):
             debate.save()
 
             # Update team wins
-            for attendance in debate.attendance_set.all():
+            for attendance in debate.get_attendances():
                 team = attendance.team
                 wins = Debate.objects.filter(winning_team=team).count()
                 team.wins = wins
@@ -203,7 +202,7 @@ def record_results_detail(request, debate_id: int):
 
     # Add speaker score forms
     attendances = []
-    for attendance in debate.attendance_set.all():
+    for attendance in debate.get_attendances():
         team = {
             "team_name": attendance.team.name,
             "speakers": [],
@@ -253,8 +252,8 @@ def filter_debate_details(request):
     }
     if (debate_id is not None) and debate_id != '':
         debate = Debate.objects.get(pk=debate_id)
-        data['teams'] = [attendance.team.id for attendance in debate.attendance_set.all()]
-        for attendance in debate.attendance_set.all():
+        data['teams'] = [attendance.team.id for attendance in debate.get_attendances()]
+        for attendance in debate.get_attendances():
             data['speakers'] += [
                 {
                     'id': speaker.id,

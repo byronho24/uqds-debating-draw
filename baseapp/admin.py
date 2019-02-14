@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models import Team, Speaker, Attendance, Debate, Score
 from .views import record_results
 from django.urls import path, include
+from datetime import datetime
 
 
 class ScoreInstanceInlineForDebate(admin.TabularInline):
@@ -14,7 +15,7 @@ class ScoreInstanceInlineForDebate(admin.TabularInline):
         max_num = 6
         if obj:
             max_num = 0
-            for attendance in obj.attendance_set.all():
+            for attendance in obj.get_attendances():
                 max_num += len(attendance.speakers.all())
 
         return max_num
@@ -44,25 +45,33 @@ class MyTeamAdmin(admin.ModelAdmin):
     inlines = [SpeakerInstanceInline]
 
 class MyDebateAdmin(admin.ModelAdmin):
-
-    list_display = ('date',
-        'team1', 'team2'
+    list_display_links = ('date',)
+    list_display = (
+        'date',
+        'attendance1', 'attendance2', 'judge'
     )
-    list_filter = ('date',)
-    readonly_fields = ("date", "judge")
+    list_editable = (
+        'attendance1', 'attendance2', 'judge',
+    )
     inlines = [ScoreInstanceInlineForDebate]
+    autocomplete_fields = ['attendance1', 'attendance2']
 
-    def team1(self, obj):
-        return obj.attendance_set.all()[0].team.name
+    # def formfield_for_foreignkey(self, db_field, request, **kwargs):
+    #     if db_field.name == "attendance1" or db_field.name == "attendance2":
+    #         kwargs["queryset"] = Attendance.objects.filter(timestamp__date=datetime.today())
+    #     return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
-    def team2(self, obj):
-        return obj.attendance_set.all()[1].team.name
+
+    def get_readonly_fields(self, request, obj):
+        if obj.date != datetime.today():
+            return ("attendance1", "attendance2", 'judge')
 
     def save_model(self, request, obj, form, change):
+        
         super().save_model(request, obj, form, change)
 
         # Post-save --> update team wins
-        for attendance in obj.attendance_set.all():
+        for attendance in obj.get_attendances():
             team = attendance.team
             wins = Debate.objects.filter(winning_team=team).count()
             team.wins = wins
@@ -83,6 +92,16 @@ class MyScoreAdmin(admin.ModelAdmin):
 class MyAttendanceAdmin(admin.ModelAdmin):
     list_display = ("timestamp", "team", "count_qualified_judges")
     list_filter = ("timestamp", "team")
+
+    # Allow search for attendances by team name
+    ordering = ['-timestamp']
+    search_fields = ['team__name']
+
+    def get_search_results(self, request, queryset, search_term):
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        queryset = queryset.filter(timestamp__date=datetime.today())
+        return queryset, use_distinct
+
 
 class MyAdminSite(admin.AdminSite):
     site_header = "UQ Debating Society Internals Administration"

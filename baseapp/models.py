@@ -1,17 +1,10 @@
 from django.db import models
 from datetime import datetime, timedelta, tzinfo
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
 
-TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
-
-class BNE(tzinfo):
-    def utcoffset(self, dt):
-        return timedelta(hours=10)
-    def tzname(self, dt):
-        return "Australia/Brisbane"
-    def dst(self, dt):
-        return timedelta(0)
-
+# TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
+TIME_FORMAT = '%Y-%m-%d'
 
 class Team(models.Model):
 
@@ -96,29 +89,47 @@ class Speaker(models.Model):
         return self.judge_qualification_score >= self.JUDGE_THRESHOLD
 
 
-class Debate(models.Model):
-    date = models.DateField()
-    judge = models.ForeignKey(Speaker, null=True, on_delete=models.SET_NULL)
-    winning_team = models.ForeignKey(Team, null=True, blank=False,
-                                        default=None, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return f"{self.date}"
-
-
 class Attendance(models.Model):
 
     timestamp = models.DateTimeField('timestamp', default=datetime.now)
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
     speakers = models.ManyToManyField(Speaker)
     want_to_judge = models.BooleanField(default=False)
-    debate = models.ForeignKey(Debate, null=True, on_delete=models.SET_NULL, default=None)
 
     def count_qualified_judges(self):
         return sum(1 for speaker in self.speakers.all() if speaker.is_qualified_as_judge())
 
     def __str__(self):
         return f"{self.timestamp.strftime(TIME_FORMAT)}  {self.team.name}"
+
+
+class Debate(models.Model):
+    date = models.DateField(default=datetime.today)
+    attendance1 = models.ForeignKey(Attendance, on_delete=models.CASCADE, related_name="attendance1_debate")
+    attendance2 = models.ForeignKey(Attendance, on_delete=models.CASCADE, related_name="attendance2_debate")
+    judge = models.ForeignKey(Speaker, null=True, on_delete=models.SET_NULL)
+    winning_team = models.ForeignKey(Team, null=True, blank=False,
+                                        default=None, on_delete=models.CASCADE)
+    
+    def __str__(self):
+        return f"{self.date}"
+
+    def get_attendances(self):
+        return [self.attendance1, self.attendance2]
+
+    def clean(self):
+        # Do not allow save if attendance1 == attendance2
+        if self.attendance1 == self.attendance2:
+            raise ValidationError(_('Attendance1 must be different to attendance2.'))
+        # Do not allow save if attendances are not in the same day
+        if self.attendance1.timestamp.date() != self.date or \
+                self.attendance2.timestamp.date() != self.date:
+            raise ValidationError(_("Date of attendances must match debate's date."))
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
 
 class Score(models.Model):
 

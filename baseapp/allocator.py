@@ -134,15 +134,11 @@ def _matchmake(attendances_competing: List[Attendance], judges: List[Speaker]):
         debate = Debate()
         debate.date = datetime.today()
         debate.judge = judges[i]
-        debate.save()
 
         # Set the debate for the attendances
-        attendance1 = attendances_competing[i*2]
-        attendance2 = attendances_competing[i*2+1]
-        for attendance in [attendance1, attendance2]:
-            attendance.debate = debate
-            attendance.save()
-
+        debate.attendance1 = attendances_competing[i*2]
+        debate.attendance2 = attendances_competing[i*2+1]
+        debate.save()
     return Debate.objects.filter(date=datetime.today())
 
 def generate_debates(attendances: List[Attendance]):
