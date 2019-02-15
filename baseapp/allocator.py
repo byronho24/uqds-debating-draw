@@ -55,6 +55,7 @@ def _assign_competing_teams(attendances: List[Attendance]):
 
     :param attendances: Attendances to be assigned competitions to
     :return: tuple of (list of competing attendances, list of speakers judging)
+    :ensures: list of competing attendances have an even number amount of elements
     """
     # Check if multiple Attendance entries exist for any given attending team
     # If so only consider the most recent entry
@@ -91,7 +92,6 @@ def _assign_competing_teams(attendances: List[Attendance]):
                 if count_qualified_judges(attendance) == delta:
                     indexToRemove = i
                     break
-        
         # Remove item at indexToRemove from PQ (defaults to 0, but if seek forward finds a better match this would be non-zero)
         judging_attendance = attendances.pop(indexToRemove)
         for judge in judging_attendance.speakers.all():
@@ -102,7 +102,7 @@ def _assign_competing_teams(attendances: List[Attendance]):
     # print(f"Debates: { _number_of_debates(attendances)}")
     # print(f"Judges: {judges}")
     # print(f"Qualified judges: {len(qualified_judges)}")
-    return ([attendance for attendance in attendances], qualified_judges)
+    return (attendances, qualified_judges)
 
 def _matchmake(attendances_competing: List[Attendance], judges: List[Speaker]):
     """
@@ -116,7 +116,7 @@ def _matchmake(attendances_competing: List[Attendance], judges: List[Speaker]):
     # Clear any existing debates for the day
     Debate.objects.filter(date=datetime.today()).delete()
     
-    if len(attendances_competing) < len(judges):
+    if len(attendances_competing) / 2 > len(judges):
         raise NotEnoughJudgesException("Not enough qualified judges available")
 
     # TODO: account for vetoes

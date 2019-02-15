@@ -19,7 +19,7 @@ def debates(request):
     debates = Debate.objects.filter(date=timezone.localdate())
 
     context = {}
-    
+
     for debate in debates:
 
         context['debates'].append({
@@ -249,7 +249,6 @@ def filter_debate_details(request):
     return JsonResponse(data)
 
 def generate_debates(request):
-    print(request.GET)
     attendances = list(Attendance.objects.filter(timestamp__date=datetime.today()))
     try:
         debates = allocator.generate_debates(attendances)
