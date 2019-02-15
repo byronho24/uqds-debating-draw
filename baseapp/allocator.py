@@ -116,7 +116,7 @@ def _matchmake(attendances_competing: List[Attendance], judges: List[Speaker]):
     # Clear any existing debates for the day
     Debate.objects.filter(date=datetime.today()).delete()
     
-    if len(attendances_competing) / 2 > len(judges):
+    if _number_of_debates(attendances_competing) > len(judges):
         raise NotEnoughJudgesException("Not enough qualified judges available")
 
     # TODO: account for vetoes

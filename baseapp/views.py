@@ -249,10 +249,17 @@ def filter_debate_details(request):
     return JsonResponse(data)
 
 def generate_debates(request):
-    attendances = list(Attendance.objects.filter(timestamp__date=datetime.today()))
-    try:
-        debates = allocator.generate_debates(attendances)
-    except NotEnoughJudgesException as nej:
-        debates = []
-        messages.error(request, str(nej))
-    return HttpResponseRedirect("/admin/baseapp/debate")
+    debates = Debate.objects.filter(date=timezone.localdate())
+    if debates:
+        messages.warning(request, "Debates already generated.")
+    else:
+        attendances = list(Attendance.objects.filter(timestamp__date=datetime.today()))
+        try:
+            debates = allocator.generate_debates(attendances)
+        except NotEnoughJudgesException as nej:
+            debates = []
+            messages.error(request, str(nej))
+
+    # Only show debates for today
+    # TODO: fix hard-coded url
+    return HttpResponseRedirect("/admin/baseapp/debate/?date__gte=2019-02-15&date__lt=2019-02-16")
