@@ -53,11 +53,14 @@ class MyDebateAdmin(admin.ModelAdmin):
         'date',
         'attendance1', 'attendance2', 'judge'
     )
-    list_editable = (
-        'attendance1', 'attendance2', 'judge',
-    )
+    # list_editable = (
+    #     'attendance1', 'attendance2', 'judge',
+    # )
     inlines = [ScoreInstanceInlineForDebate]
     autocomplete_fields = ['attendance1', 'attendance2']
+
+    # def has_add_permission(self, request, obj=None):
+    #     return False
 
     # def formfield_for_foreignkey(self, db_field, request, **kwargs):
     #     if db_field.name == "attendance1" or db_field.name == "attendance2":

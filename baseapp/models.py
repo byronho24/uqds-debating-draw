@@ -1,5 +1,6 @@
 from django.db import models
 from datetime import datetime, timedelta, tzinfo
+from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
 
@@ -91,7 +92,7 @@ class Speaker(models.Model):
 
 class Attendance(models.Model):
 
-    timestamp = models.DateTimeField('timestamp', default=datetime.now)
+    timestamp = models.DateTimeField('timestamp', default=timezone.now)
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
     speakers = models.ManyToManyField(Speaker)
     want_to_judge = models.BooleanField(default=False)
@@ -104,7 +105,7 @@ class Attendance(models.Model):
 
 
 class Debate(models.Model):
-    date = models.DateField(default=datetime.today)
+    date = models.DateField(default=timezone.localdate)
     attendance1 = models.ForeignKey(Attendance, on_delete=models.CASCADE, related_name="attendance1_debate")
     attendance2 = models.ForeignKey(Attendance, on_delete=models.CASCADE, related_name="attendance2_debate")
     judge = models.ForeignKey(Speaker, null=True, on_delete=models.SET_NULL)
@@ -125,6 +126,14 @@ class Debate(models.Model):
         if self.attendance1.timestamp.date() != self.date or \
                 self.attendance2.timestamp.date() != self.date:
             raise ValidationError(_("Date of attendances must match debate's date."))
+
+
+# class MatchDay(models.Model):
+#     """ Saves the attentances that are competing and the 
+#         speakers assigned to be judges on the day."""
+#     date = models.DateField()
+#     attendances_competing = models.ManyToManyField(Attendance)
+#     judges = models.ManyToManyField(Speaker)
 
 
 class Score(models.Model):

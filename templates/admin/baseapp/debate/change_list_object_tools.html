@@ -1,0 +1,12 @@
+{% extends "admin/change_list_object_tools.html" %} {% load i18n admin_urls %}
+{% block object-tools-items %}
+  <li>
+    {% if has_add_permission %}
+      {% url cl.opts|admin_urlname:'add' as add_url %}
+        <a href="{% add_preserved_filters add_url is_popup to_field %}" class="addlink">
+          {% blocktrans with cl.opts.verbose_name as name %}Add {{ name }}{% endblocktrans %}
+        </a>
+    {% endif %}
+    <a href="{% url 'baseapp:generate_debates' %}" class="addlink">Generate debates</a>
+  </li>
+{% endblock %}

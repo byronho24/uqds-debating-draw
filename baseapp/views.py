@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from datetime import date, datetime, timedelta
+from django.utils import timezone
 from . import allocator
 from .forms import TeamAttendanceForm, TeamSignupForm, DebateResultsForm, ScoreForm
 from .models import Attendance, Speaker, Team, Score, Debate
@@ -15,27 +16,10 @@ def index(request):
     return render(request, 'baseapp/index.html')
 
 def debates(request):
-    try:
-        debates = allocator.get_or_generate_debates(Attendance.objects.filter(timestamp__date=datetime.today()))
-    except NotEnoughJudgesException as nej:
-        debates = []
-        messages.error(request, str(nej))
+    debates = Debate.objects.filter(date=timezone.localdate())
 
-    context = {
-        'debates': []
-    }
-
-    if request.method == "GET" and request.GET.get('generate_debates'):
-        # Force regenerate debates
-        # TODO: set deadline time?
-        attendances = list(Attendance.objects.filter(timestamp__date=datetime.today()))
-        try:
-            debates = allocator.generate_debates(attendances)
-        except NotEnoughJudgesException as nej:
-            debates = []
-            messages.error(request, str(nej))
-        return HttpResponse(request, "Debates generated.")
-
+    context = {}
+    
     for debate in debates:
 
         context['debates'].append({
@@ -263,3 +247,13 @@ def filter_debate_details(request):
                 for speaker in attendance.speakers.all()
             ]
     return JsonResponse(data)
+
+def generate_debates(request):
+    print(request.GET)
+    attendances = list(Attendance.objects.filter(timestamp__date=datetime.today()))
+    try:
+        debates = allocator.generate_debates(attendances)
+    except NotEnoughJudgesException as nej:
+        debates = []
+        messages.error(request, str(nej))
+    return HttpResponseRedirect("/admin/baseapp/debate")
