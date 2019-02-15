@@ -87,7 +87,6 @@ def _assign_competing_teams(attendances: List[Attendance]):
             # Seek forward to see which team (if any) matches required number of qualified judges
             SEEK_FORWARD = 3
             for i in range(0, min(SEEK_FORWARD, attendances_count)):
-                # FIXME: fix magic number '3' -> set a limit to seek forward
                 attendance = attendances[i]
                 if count_qualified_judges(attendance) == delta:
                     indexToRemove = i
@@ -164,4 +163,5 @@ def get_or_generate_debates(attendances):
         return generate_debates(list(attendances))
     else:
         print("No new attendances")
+        # FIXME: index out of range if attendances is an empty list
         return Debate.objects.filter(date=attendances[0].timestamp.date()).all()

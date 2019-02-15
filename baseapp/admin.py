@@ -4,6 +4,9 @@ from .models import Team, Speaker, Attendance, Debate, Score
 from .views import record_results
 from django.urls import path, include
 from datetime import datetime
+from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
+from django.contrib import messages
+
 
 
 class ScoreInstanceInlineForDebate(admin.TabularInline):
@@ -79,6 +82,20 @@ class MyDebateAdmin(admin.ModelAdmin):
 
         # Update team judged_before
         Team.objects.filter(pk=obj.judge.team.id).update(judged_before=True)
+
+    def save_formset(self, request, form, formset, change):
+        # get all the objects in the formset
+        instances = formset.save(commit=False)
+
+        for instance in instances:
+            # Perform custom validation
+            try:
+                instance.clean()
+            except ValidationError as e:
+                # Display error to user
+                messages.error(request, str(e))
+            else:
+                instance.save()
 
 class MySpeakerAdmin(admin.ModelAdmin):
     # inlines = [ScoreInstanceInlineForSpeaker]

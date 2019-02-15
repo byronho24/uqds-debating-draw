@@ -126,10 +126,6 @@ class Debate(models.Model):
                 self.attendance2.timestamp.date() != self.date:
             raise ValidationError(_("Date of attendances must match debate's date."))
 
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        return super().save(*args, **kwargs)
-
 
 class Score(models.Model):
 
