@@ -54,6 +54,20 @@ class DebateInstanceInline(admin.TabularInline):
             kwargs["queryset"] = Attendance.objects.filter(timestamp__date=timezone.localdate())
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
+    def save_formset(self, request, form, formset, change):
+        # get all the objects in the formset
+        instances = formset.save(commit=False)
+
+        for instance in instances:
+            # Perform custom validation
+            try:
+                instance.clean()
+            except ValidationError as e:
+                # Display error to user
+                messages.error(request, str(e))
+            else:
+                instance.save()
+
 class MyTeamAdmin(admin.ModelAdmin):
     list_display = ("name", "wins", "count_qualified_judges")
     inlines = [SpeakerInstanceInline]
@@ -141,6 +155,7 @@ class MyAttendanceAdmin(admin.ModelAdmin):
 class MyMatchDayAdmin(admin.ModelAdmin):
     inlines = [DebateInstanceInline]
     readonly_fields = ["date"]
+    fields = ('date',)
 
 class MyAdminSite(admin.AdminSite):
     site_header = "UQ Debating Society Internals Administration"

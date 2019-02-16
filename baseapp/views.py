@@ -278,7 +278,7 @@ def generate_debates(request):
             except CannotFindWorkingConfigurationException as e:
                 messages.error(request, str(e))
             else:
-                messages.success(request, "Please review the debates generated.")
+                messages.success(request, "Please review the debates generated, and click 'Save' once you are happy with the allocated debates.")
                 return HttpResponseRedirect(f"/admin/baseapp/matchday/{match_day.id}/change/")
 
     # TODO: fix hard-coded url

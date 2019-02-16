@@ -59,14 +59,15 @@ def is_vetoed(attendance1: Attendance, attendance2: Attendance):
 
 def _assign_competing_teams(attendances: List[Attendance]):
     """
-    Determines which teams are competing and which teams are judging on the day.
+    Determines which teams are competing and the speakers that will be judging on the day.
 
     :param attendances: Attendances to be assigned competitions to
-    :return: tuple of (list of competing attendances, list of speakers judging)
-    :ensures: list of competing attendances have an even number amount of elements
+    :return: the generated MatchDay
+    :ensures: - list of competing attendances have an even number amount of elements and is non-zero
+              - len(judges) >= floor(len(attendances_competing) / 2)
     """
     # Check if multiple Attendance entries exist for any given attending team
-    # If so only consider the most recent entry
+    # If so only consider the most recent entry  
     attendances = sorted(attendances, key=attrgetter('timestamp'))
     attendances_dict = {}
     for attendance in attendances:
@@ -74,6 +75,10 @@ def _assign_competing_teams(attendances: List[Attendance]):
         # given team would overwrite its previous attendance entries
         attendances_dict[attendance.team.id] = attendance
     attendances = list(attendances_dict.values())
+
+    # Check if we have at least 3 attendances --> minimum amount for a debate with judge
+    if len(attendances) < 3:
+        raise NotEnoughAttendancesException("Not enough attendances to generate at least one debate.")
 
     # print("Want to judge")
     # for attendance in Attendance.objects.filter(want_to_judge=True, timestamp__date=datetime.today()).all():
@@ -94,7 +99,7 @@ def _assign_competing_teams(attendances: List[Attendance]):
         if attendances_count % 2 != 0 and delta <= 3:
             # In this case we may be able to only pop one more team from PQ
             # Seek forward to see which team (if any) matches required number of qualified judges
-            SEEK_FORWARD = 3
+            SEEK_FORWARD = 2
             for i in range(0, min(SEEK_FORWARD, attendances_count)):
                 attendance = attendances[i]
                 if count_qualified_judges(attendance) == delta:
@@ -110,29 +115,38 @@ def _assign_competing_teams(attendances: List[Attendance]):
     # print(f"Debates: { _number_of_debates(attendances)}")
     # print(f"Judges: {judges}")
     # print(f"Qualified judges: {len(qualified_judges)}")
-    return (attendances, qualified_judges)
 
-def _matchmake(attendances_competing: List[Attendance], judges: List[Speaker]):
+    # Check if assigning process gave valid results
+    if not attendances:
+        raise NotEnoughJudgesException("Not enough qualified judges to host debates.")
+
+    # Assigning process gives valid result - now save to new MatchDay instance
+    match_day = MatchDay()
+    match_day.save()
+    for attendance in attendances:
+        match_day.attendances_competing.add(attendance)
+    for judge in qualified_judges:
+        match_day.judges.add(judge)
+    match_day.save()
+
+    return match_day
+    
+
+def _matchmake(match_day: MatchDay):
     """
     Assigns the debates for the day.
 
-    :param attendances_competing: Attendances to assign competitions for
-    :param judges: Available judges for the day
+    :param match_day: the MatchDay to generate debates for
     :return: the generated MatchDay
+    :requires:  - len(attendances_competing) is greater than zero and even
+                - len(judges) >= floor(len(attendances) / 2)
 
     """
     # Clear any existing debates for the day
-    MatchDay.objects.filter(date=timezone.localdate()).delete()
-    
-    if not attendances_competing:
-        raise NotEnoughAttendancesException("Not enough attendances to generate at least one debate.")
+    Debate.objects.filter(match_day=match_day).delete()
 
-    if _number_of_debates(attendances_competing) > len(judges):
-        raise NotEnoughJudgesException("Not enough qualified judges available")
-
-    # Create new MatchDay
-    match_day = MatchDay()
-    match_day.save()
+    attendances_competing = list(match_day.attendances_competing.all())
+    judges = list(match_day.judges.all())
 
     # TODO: account for vetoes
     sorting_list = []
@@ -198,6 +212,5 @@ def generate_debates(attendances: List[Attendance]):
     """
     if not attendances:
         return []   # No attendances
-    competing_attendances, judges = _assign_competing_teams(attendances)
-    match_day = _matchmake(competing_attendances, judges)
+    match_day = _matchmake(_assign_competing_teams(attendances))
     return match_day

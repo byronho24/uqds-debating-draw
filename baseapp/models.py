@@ -125,16 +125,18 @@ class Debate(models.Model):
     def clean(self):
         # Do not allow save if attendance1 == attendance2
         if self.attendance1 == self.attendance2:
-            raise ValidationError(_('Attendance1 must be different to attendance2.'))
+            raise ValidationError('Attendance1 must be different to Attendance2.')
         # Do not allow save if attendances are not in the same day
         if self.attendance1.timestamp.date() != self.match_day.date or \
                 self.attendance2.timestamp.date() != self.match_day.date:
-            raise ValidationError(_("Date of attendances must match debate's date."))
+            raise ValidationError("Date of attendances must match debate's date.")
 
 
 class MatchDay(models.Model):
     """ Saves the debates for a specific match day."""
     date = models.DateField(default=timezone.localdate, unique=True)
+    attendances_competing = models.ManyToManyField(Attendance)
+    judges = models.ManyToManyField(Speaker)
 
     def __str__(self):
         return f"{self.date}"
