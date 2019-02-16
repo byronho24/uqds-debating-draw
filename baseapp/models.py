@@ -50,7 +50,7 @@ class Speaker(models.Model):
 
     name = models.CharField(max_length=50)
     team = models.ForeignKey(Team, blank=True, null=True,
-    on_delete=models.SET_NULL)
+                                    on_delete=models.SET_NULL)
     state_team = models.BooleanField(default=False)
     pro = models.BooleanField(default=False)
     easters_attend = models.BooleanField(default=False)
@@ -59,6 +59,7 @@ class Speaker(models.Model):
     awdc_break = models.BooleanField(default=False)
     wudc_break = models.BooleanField(default=False)
     qualification_score = models.IntegerField(editable=False, default=0)
+    vetoes = models.ManyToManyField('self', symmetrical=False)
 
     def __str__(self):
         return self.name
