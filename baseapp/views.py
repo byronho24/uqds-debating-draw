@@ -5,7 +5,7 @@ from django.utils import timezone
 from . import allocator
 from .forms import TeamAttendanceForm, TeamSignupForm, DebateResultsForm, ScoreForm
 from .models import Attendance, Speaker, Team, Score, Debate
-from .exceptions import NotEnoughJudgesException
+from .exceptions import NotEnoughJudgesException, CannotFindWorkingConfigurationException
 from django.contrib import messages
 from django.urls import reverse
 from operator import itemgetter
@@ -261,6 +261,8 @@ def generate_debates(request):
             allocator.generate_debates(attendances)
         except NotEnoughJudgesException as nej:
             messages.error(request, str(nej))
+        except CannotFindWorkingConfigurationException as e:
+            messages.error(request, str(e))
 
     # TODO: fix hard-coded url
     return HttpResponseRedirect("/admin/baseapp/debate/")

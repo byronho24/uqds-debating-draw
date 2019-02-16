@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List
 import math
 from operator import itemgetter, attrgetter
-from .exceptions import NotEnoughJudgesException
+from .exceptions import NotEnoughJudgesException, CannotFindWorkingConfigurationException
 
 # Weightings
 WEIGHTS = {
@@ -13,10 +13,6 @@ WEIGHTS = {
     'one_present': 12,
     'qualified_judge': 4
 }
-
-# Number of attendances when generating debates last time
-# Used to track whether we need to regenerate debates
-attendances_last = None
 
 def count_qualified_judges(attendance: Attendance):
     sum(1 for speaker in attendance.speakers.all() if speaker.is_qualified_as_judge())
@@ -42,6 +38,24 @@ def _assign_team_judging_score(attendance: Attendance):
 
 def _number_of_debates(attendances: List[Attendance]):
     return math.floor(len(attendances) / 2)
+
+def get_vetoed_speakers_for_attendance(attendance: Attendance):
+    vetoed_speakers = []
+    for speaker in attendance.speakers.all():
+        for vetoed_speaker in speaker.vetoes.all():
+            vetoed_speakers.append(vetoed_speaker)
+    return vetoed_speakers
+
+def is_vetoed(attendance1: Attendance, attendance2: Attendance):
+    """
+        Returns True if any speaker of attendance1 has vetoed any speaker in attendance2.
+        Return False otherwise.
+    """
+    attendance1_vetoed_speakers = get_vetoed_speakers_for_attendance(attendance1)
+    for speaker in attendance2.speakers.all():
+        if speaker in attendance1_vetoed_speakers:
+            return True
+    return False
 
 def _assign_competing_teams(attendances: List[Attendance]):
     """
@@ -125,11 +139,34 @@ def _matchmake(attendances_competing: List[Attendance], judges: List[Speaker]):
     debates = []
     # Generate the debate objects
     for i in range(0, _number_of_debates(attendances_competing)):
+        # Remove first two attendances from PQ
+        attendance1 = attendances_competing.pop(0)
+        attendance2 = attendances_competing.pop(0)
+
+        # Check for vetoes --> doesn't matter who initiated the veto
+        if is_vetoed(attendance1, attendance2) or is_vetoed(attendance2, attendance1):
+            # Swap attendance2 (the lower ranked out of [attendance1, attendance2])
+            #  with highest ranked non-vetoed team ranked below
+            for attendance_to_swap in attendances_competing:
+                if not is_vetoed(attendance2, attendance_to_swap):
+                    # TODO: use a deque?
+                    # Prepend original attendance2 back into PQ
+                    attendances_competing.insert(0, attendance2)
+                    # Remove attendance_to_swap from PQ
+                    attendance2 = attendance_to_swap
+                    attendances_competing.remove(attendance_to_swap)
+                    break
+            else:
+                # No team found for swap!
+                # For now raise an error
+                raise CannotFindWorkingConfigurationException(
+                    "Cannot find debates that satisfy veto criteria."
+                )
+
         debate = Debate()
         debate.date = datetime.today()
-        debate.attendance1 = attendances_competing[i*2]
-        debate.attendance2 = attendances_competing[i*2+1]
-        debate.save()
+        debate.attendance1 = attendance1
+        debate.attendance2 = attendance2
 
         debates.append(debate)
 
@@ -138,7 +175,7 @@ def _matchmake(attendances_competing: List[Attendance], judges: List[Speaker]):
         # Assign excess judges to the highest-ranked debates
         debates[i % len(debates)].judges.add(judge)
 
-    return Debate.objects.filter(date=datetime.today())
+    return debates
 
 def generate_debates(attendances: List[Attendance]):
     """
@@ -154,14 +191,14 @@ def generate_debates(attendances: List[Attendance]):
     debates = _matchmake(competing_attendances, judges)
     return debates
 
-def get_or_generate_debates(attendances):
-    global attendances_last
-    if (attendances_last is None) or len(attendances) != attendances_last:
-        # Generate debates
-        print("Attendances modified - now generate debates")
-        attendances_last = len(attendances)
-        return generate_debates(list(attendances))
-    else:
-        print("No new attendances")
-        # FIXME: index out of range if attendances is an empty list
-        return Debate.objects.filter(date=attendances[0].timestamp.date()).all()
+# def get_or_generate_debates(attendances):
+#     global attendances_last
+#     if (attendances_last is None) or len(attendances) != attendances_last:
+#         # Generate debates
+#         print("Attendances modified - now generate debates")
+#         attendances_last = len(attendances)
+#         return generate_debates(list(attendances))
+#     else:
+#         print("No new attendances")
+#         # FIXME: index out of range if attendances is an empty list
+#         return Debate.objects.filter(date=attendances[0].timestamp.date()).all()
