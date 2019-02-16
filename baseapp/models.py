@@ -13,7 +13,6 @@ class Team(models.Model):
 
     name = models.CharField(max_length=200, unique=True, verbose_name="team name")
     judged_before = models.BooleanField(default=False)
-    wins = models.IntegerField(default=0)
 
     def get_speakers_avg_score(self):
         avg = 0
@@ -27,6 +26,9 @@ class Team(models.Model):
 
     def count_qualified_judges(self):
         return sum(1 for speaker in self.speaker_set.all() if speaker.is_qualified_as_judge())
+
+    def get_wins(self):
+        return self.debates_won.count()
 
     def __str__(self):
         return self.name
@@ -110,7 +112,8 @@ class Debate(models.Model):
     attendance2 = models.ForeignKey(Attendance, on_delete=models.CASCADE, related_name="attendance2_debate", null=True)
     judges = models.ManyToManyField(Speaker)
     winning_team = models.ForeignKey(Team, null=True, blank=False,
-                                        default=None, on_delete=models.CASCADE)
+                                        default=None, on_delete=models.CASCADE,
+                                            related_name="debates_won")
     
     def __str__(self):
         return f"{self.date}"

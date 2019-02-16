@@ -44,8 +44,11 @@ class SpeakerInstanceInline(admin.TabularInline):
     can_delete = False
 
 class MyTeamAdmin(admin.ModelAdmin):
-    list_display = ("name", "count_qualified_judges")
+    list_display = ("name", "wins", "count_qualified_judges")
     inlines = [SpeakerInstanceInline]
+
+    def wins(self, obj):
+        return obj.get_wins()
 
     def has_add_permission(self, request, obj=None):
         return False
@@ -82,13 +85,6 @@ class MyDebateAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         
         super().save_model(request, obj, form, change)
-
-        # Post-save --> update team wins
-        for attendance in obj.get_attendances():
-            team = attendance.team
-            wins = Debate.objects.filter(winning_team=team).count()
-            team.wins = wins
-            team.save()
 
         # Update team judged_before
         for judge in obj.judges.all():

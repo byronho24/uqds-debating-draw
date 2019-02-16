@@ -123,7 +123,7 @@ def _matchmake(attendances_competing: List[Attendance], judges: List[Speaker]):
     sorting_list = []
     for attendance in attendances_competing:
         team = attendance.team
-        sorting_list.append((team.wins, team.get_speakers_avg_score(), attendance))
+        sorting_list.append((team.get_wins(), team.get_speakers_avg_score(), attendance))
     # Sort teams by wins then by average speaker score
     sorting_list.sort(key=itemgetter(0, 1), reverse=True)
     attendances_competing = [item[2] for item in sorting_list]

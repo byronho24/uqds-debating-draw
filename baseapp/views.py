@@ -122,17 +122,17 @@ def signupform(request):
 def table(request):
     # Gets all the teams
     teams = list(Team.objects.all())
-    # TODO: Sort teams based on wins
+
     sorting_list = []
     for team in teams:
-        sorting_list.append((team.wins, team.get_speakers_avg_score(), team))
+        sorting_list.append((team.get_wins(), team.get_speakers_avg_score(), team))
     sorting_list.sort(key=itemgetter(0,1), reverse=True)
     sorted_teams = []
     for item in sorting_list:
         team = item[2]
         sorted_teams.append({
             'name': team.name,
-            'wins': team.wins,
+            'wins': team.get_wins(),
             'speaker_avg_score': "%.2f" % team.get_speakers_avg_score(),
         })
     context = {
@@ -166,13 +166,6 @@ def record_results_detail(request, debate_id: int):
             # Update winner for debate
             debate.winning_team = winning_team_form.cleaned_data['winning_team']
             debate.save()
-
-            # Update team wins
-            for attendance in debate.get_attendances():
-                team = attendance.team
-                wins = Debate.objects.filter(winning_team=team).count()
-                team.wins = wins
-                team.save()
 
             # Update team judged_before
             Team.objects.filter(pk=debate.judge.team.id).update(judged_before=True)
