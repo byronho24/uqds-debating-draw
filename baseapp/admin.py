@@ -5,6 +5,7 @@ from django.urls import path, include
 from django.utils import timezone
 from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
 from django.contrib import messages
+from ajax_select import make_ajax_form
 
 
 class ScoreInstanceInlineForDebate(admin.TabularInline):
@@ -46,13 +47,26 @@ class DebateInstanceInline(admin.TabularInline):
     extra = 0
     can_delete = False
     exclude = ["winning_team"]
-    autocomplete_fields = ["attendance1", "attendance2"]
+    # autocomplete_fields = ["attendance1", "attendance2"]
     show_change_link = True
+    # form = make_ajax_form(Debate, {
+    #     'attendance1': 'attendances_for_debate',
+    #     'attendance2': 'attendances_for_debate',
+    #     'judges': 'judges_for_debate'
+    # })
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "attendance1" or db_field.name == "attendance2":
-            kwargs["queryset"] = Attendance.objects.filter(timestamp__date=timezone.localdate())
+            match_day = MatchDay.objects.get(date=timezone.localdate())
+            kwargs["queryset"] = match_day.attendances_competing.all()
+        # TODO: order these attendances
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        if db_field.name == "judges":
+            match_day = MatchDay.objects.get(date=timezone.localdate())
+            kwargs["queryset"] =  match_day.judges.all()
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
 
     def save_formset(self, request, form, formset, change):
         # get all the objects in the formset
