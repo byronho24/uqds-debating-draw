@@ -58,7 +58,7 @@ class Speaker(models.Model):
     australs_break = models.BooleanField(default=False)
     awdc_break = models.BooleanField(default=False)
     wudc_break = models.BooleanField(default=False)
-    judge_qualification_score = models.IntegerField(editable=False, default=0)
+    qualification_score = models.IntegerField(editable=False, default=0)
 
     def __str__(self):
         return self.name
@@ -73,7 +73,7 @@ class Speaker(models.Model):
         avg /= len(scores)
         return avg
 
-    def _get_judge_qualification_score(self) -> int:
+    def _get_qualification_score(self) -> int:
         score = 0
         score += self.state_team * self.WEIGHTS['StateTeam'] + \
                  self.pro * self.WEIGHTS['Pro'] + \
@@ -85,11 +85,11 @@ class Speaker(models.Model):
         return score
 
     def save(self, *args, **kwargs):
-        self.judge_qualification_score = self._get_judge_qualification_score()
+        self.qualification_score = self._get_qualification_score()
         super().save(*args, **kwargs)
 
     def is_qualified_as_judge(self):
-        return self.judge_qualification_score >= self.JUDGE_THRESHOLD
+        return self.qualification_score >= self.JUDGE_THRESHOLD
 
 
 class Attendance(models.Model):

@@ -14,18 +14,12 @@ WEIGHTS = {
     'qualified_judge': 4
 }
 
-# Judge qualification threshold
-JUDGE_THRESHOLD = 10
-
 # Number of attendances when generating debates last time
 # Used to track whether we need to regenerate debates
 attendances_last = None
 
-def is_qualified_as_judge(speaker: Speaker):
-    return speaker.judge_qualification_score >= JUDGE_THRESHOLD
-
 def count_qualified_judges(attendance: Attendance):
-    sum(1 for speaker in attendance.speakers.all() if is_qualified_as_judge(speaker))
+    sum(1 for speaker in attendance.speakers.all() if speaker.is_qualified_as_judge())
 
 
 def _assign_team_judging_score(attendance: Attendance):
@@ -96,7 +90,7 @@ def _assign_competing_teams(attendances: List[Attendance]):
         judging_attendance = attendances.pop(indexToRemove)
         for judge in judging_attendance.speakers.all():
             judges += 1
-            if is_qualified_as_judge(judge):
+            if judge.is_qualified_as_judge():
                 qualified_judges.append(judge)
 
     # print(f"Debates: { _number_of_debates(attendances)}")

@@ -107,7 +107,7 @@ class MyDebateAdmin(admin.ModelAdmin):
 
 class MySpeakerAdmin(admin.ModelAdmin):
     # inlines = [ScoreInstanceInlineForSpeaker]
-    list_display = ("name", "team", "judge_qualification_score")
+    list_display = ("name", "team", "qualification_score")
     list_filter = ("team",)
 
 class MyScoreAdmin(admin.ModelAdmin):
