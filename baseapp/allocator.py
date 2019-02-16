@@ -1,9 +1,9 @@
-from .models import Attendance, Speaker, Team, Debate
-from datetime import datetime
+from .models import Attendance, Speaker, Team, Debate, MatchDay
+from django.utils import timezone
 from typing import List
 import math
 from operator import itemgetter, attrgetter
-from .exceptions import NotEnoughJudgesException, CannotFindWorkingConfigurationException
+from .exceptions import NotEnoughJudgesException, CannotFindWorkingConfigurationException, NotEnoughAttendancesException
 
 # Weightings
 WEIGHTS = {
@@ -118,14 +118,21 @@ def _matchmake(attendances_competing: List[Attendance], judges: List[Speaker]):
 
     :param attendances_competing: Attendances to assign competitions for
     :param judges: Available judges for the day
-    :return: QuerySet of Debate objects
+    :return: the generated MatchDay
 
     """
     # Clear any existing debates for the day
-    Debate.objects.filter(date=datetime.today()).delete()
+    MatchDay.objects.filter(date=timezone.localdate()).delete()
     
+    if not attendances_competing:
+        raise NotEnoughAttendancesException("Not enough attendances to generate at least one debate.")
+
     if _number_of_debates(attendances_competing) > len(judges):
         raise NotEnoughJudgesException("Not enough qualified judges available")
+
+    # Create new MatchDay
+    match_day = MatchDay()
+    match_day.save()
 
     # TODO: account for vetoes
     sorting_list = []
@@ -164,18 +171,22 @@ def _matchmake(attendances_competing: List[Attendance], judges: List[Speaker]):
                 )
 
         debate = Debate()
-        debate.date = datetime.today()
+        debate.match_day = match_day
         debate.attendance1 = attendance1
         debate.attendance2 = attendance2
 
         debates.append(debate)
 
+    # Save the debates (now that the configuration must be a valid one)
+    for debate in debates:
+        debate.save()
+    
     # Assign judges to the debates
     for i, judge in enumerate(judges):
         # Assign excess judges to the highest-ranked debates
         debates[i % len(debates)].judges.add(judge)
 
-    return debates
+    return match_day
 
 def generate_debates(attendances: List[Attendance]):
     """
@@ -183,22 +194,10 @@ def generate_debates(attendances: List[Attendance]):
     Instantiates Debate objects and saves them to the database.
 
     :param attendances: Attendances to generate debates for
-    :return: QuerySet of Debate objects
+    :return: the generated MatchDay
     """
     if not attendances:
         return []   # No attendances
     competing_attendances, judges = _assign_competing_teams(attendances)
-    debates = _matchmake(competing_attendances, judges)
-    return debates
-
-# def get_or_generate_debates(attendances):
-#     global attendances_last
-#     if (attendances_last is None) or len(attendances) != attendances_last:
-#         # Generate debates
-#         print("Attendances modified - now generate debates")
-#         attendances_last = len(attendances)
-#         return generate_debates(list(attendances))
-#     else:
-#         print("No new attendances")
-#         # FIXME: index out of range if attendances is an empty list
-#         return Debate.objects.filter(date=attendances[0].timestamp.date()).all()
+    match_day = _matchmake(competing_attendances, judges)
+    return match_day

@@ -108,7 +108,7 @@ class Attendance(models.Model):
 
 
 class Debate(models.Model):
-    date = models.DateField(default=timezone.localdate)
+    match_day = models.ForeignKey('MatchDay', on_delete=models.CASCADE, null=True)
     attendance1 = models.ForeignKey(Attendance, on_delete=models.CASCADE, related_name="attendance1_debate", null=True)
     attendance2 = models.ForeignKey(Attendance, on_delete=models.CASCADE, related_name="attendance2_debate", null=True)
     judges = models.ManyToManyField(Speaker)
@@ -117,7 +117,7 @@ class Debate(models.Model):
                                             related_name="debates_won")
     
     def __str__(self):
-        return f"{self.date}"
+        return f"{self.match_day}"
 
     def get_attendances(self):
         return [self.attendance1, self.attendance2]
@@ -127,18 +127,17 @@ class Debate(models.Model):
         if self.attendance1 == self.attendance2:
             raise ValidationError(_('Attendance1 must be different to attendance2.'))
         # Do not allow save if attendances are not in the same day
-        if self.attendance1.timestamp.date() != self.date or \
-                self.attendance2.timestamp.date() != self.date:
+        if self.attendance1.timestamp.date() != self.match_day.date or \
+                self.attendance2.timestamp.date() != self.match_day.date:
             raise ValidationError(_("Date of attendances must match debate's date."))
 
 
-# class MatchDay(models.Model):
-#     """ Saves the attentances that are competing and the 
-#         speakers assigned to be judges on the day."""
-#     date = models.DateField()
-#     attendances_competing = models.ManyToManyField(Attendance)
-#     judges = models.ManyToManyField(Speaker)
+class MatchDay(models.Model):
+    """ Saves the debates for a specific match day."""
+    date = models.DateField(default=timezone.localdate, unique=True)
 
+    def __str__(self):
+        return f"{self.date}"
 
 class Score(models.Model):
 

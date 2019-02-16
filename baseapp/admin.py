@@ -1,12 +1,10 @@
 from django.contrib import admin
 
-from .models import Team, Speaker, Attendance, Debate, Score
-from .views import record_results
+from .models import Team, Speaker, Attendance, Debate, Score, MatchDay
 from django.urls import path, include
 from django.utils import timezone
 from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
 from django.contrib import messages
-
 
 
 class ScoreInstanceInlineForDebate(admin.TabularInline):
@@ -43,6 +41,19 @@ class SpeakerInstanceInline(admin.TabularInline):
     extra = 0
     can_delete = False
 
+class DebateInstanceInline(admin.TabularInline):
+    model = Debate
+    extra = 0
+    can_delete = False
+    exclude = ["winning_team"]
+    autocomplete_fields = ["attendance1", "attendance2"]
+    show_change_link = True
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "attendance1" or db_field.name == "attendance2":
+            kwargs["queryset"] = Attendance.objects.filter(timestamp__date=timezone.localdate())
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
 class MyTeamAdmin(admin.ModelAdmin):
     list_display = ("name", "wins", "count_qualified_judges")
     inlines = [SpeakerInstanceInline]
@@ -55,12 +66,10 @@ class MyTeamAdmin(admin.ModelAdmin):
 
 
 class MyDebateAdmin(admin.ModelAdmin):
-    list_display_links = ('date',)
     list_display = (
-        'date',
-        'attendance1', 'attendance2'
+        'match_day', 'attendance1', 'attendance2'
     )
-    list_filter = ('date',)
+    list_filter = ('match_day',)
     # list_editable = (
     #     'attendance1', 'attendance2', 'judges',
     # )
@@ -70,14 +79,9 @@ class MyDebateAdmin(admin.ModelAdmin):
     def has_add_permission(self, request, obj=None):
         return False
 
-    # def formfield_for_foreignkey(self, db_field, request, **kwargs):
-    #     if db_field.name == "attendance1" or db_field.name == "attendance2":
-    #         kwargs["queryset"] = Attendance.objects.filter(timestamp__date=timezone.localdate())
-    #     return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
 
     def get_readonly_fields(self, request, obj):
-        if obj.date != timezone.localdate():
+        if obj.match_day.date != timezone.localdate():
             return ("attendance1", "attendance2", 'judges')
         else:
             return tuple()
@@ -134,16 +138,14 @@ class MyAttendanceAdmin(admin.ModelAdmin):
         return queryset, use_distinct
 
 
+class MyMatchDayAdmin(admin.ModelAdmin):
+    inlines = [DebateInstanceInline]
+    readonly_fields = ["date"]
+
 class MyAdminSite(admin.AdminSite):
     site_header = "UQ Debating Society Internals Administration"
     site_title = "UQDS Admin"
 
-    def get_urls(self):
-        urls = super().get_urls()
-        my_urls = [
-            path('record_results', self.admin_view(record_results)),
-        ]
-        return urls + my_urls
 
 admin_site = MyAdminSite(name="myadmin")
 admin_site.register(Team, MyTeamAdmin)
@@ -151,3 +153,4 @@ admin_site.register(Speaker, MySpeakerAdmin)
 admin_site.register(Attendance, MyAttendanceAdmin)
 admin_site.register(Score, MyScoreAdmin)
 admin_site.register(Debate, MyDebateAdmin)
+admin_site.register(MatchDay, MyMatchDayAdmin)
