@@ -128,16 +128,22 @@ def _matchmake(attendances_competing: List[Attendance], judges: List[Speaker]):
     sorting_list.sort(key=itemgetter(0, 1), reverse=True)
     attendances_competing = [item[2] for item in sorting_list]
 
+    debates = []
     # Generate the debate objects
     for i in range(0, _number_of_debates(attendances_competing)):
         debate = Debate()
         debate.date = datetime.today()
-        debate.judge = judges[i]
-
-        # Set the debate for the attendances
         debate.attendance1 = attendances_competing[i*2]
         debate.attendance2 = attendances_competing[i*2+1]
         debate.save()
+
+        debates.append(debate)
+
+    # Assign judges to the debates
+    for i, judge in enumerate(judges):
+        # Assign excess judges to the highest-ranked debates
+        debates[i % len(debates)].judges.add(judge)
+
     return Debate.objects.filter(date=datetime.today())
 
 def generate_debates(attendances: List[Attendance]):

@@ -10,6 +10,12 @@ class TeamAttendanceForm(forms.ModelForm):
         labels = {
             'speakers': "Attending Speakers"
         }
+        help_texts = {
+            'want_to_judge': 
+                    "Note that this does not guarantee that you would judge/not judge; but "+\
+                        "if checked, this would inform the allocation system to place your team at a higher "+\
+                            "priority for judging."
+        }
 
 
 class TeamSignupForm(forms.ModelForm):

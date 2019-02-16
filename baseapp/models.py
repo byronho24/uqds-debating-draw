@@ -11,7 +11,7 @@ class Team(models.Model):
 
     MAX_SPEAKERS = 5
 
-    name = models.CharField(max_length=200, unique=True)
+    name = models.CharField(max_length=200, unique=True, verbose_name="team name")
     judged_before = models.BooleanField(default=False)
     wins = models.IntegerField(default=0)
 
@@ -92,10 +92,10 @@ class Speaker(models.Model):
 
 class Attendance(models.Model):
 
-    timestamp = models.DateTimeField('timestamp', default=timezone.now)
+    timestamp = models.DateTimeField('timestamp', default=timezone.localtime)
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
     speakers = models.ManyToManyField(Speaker)
-    want_to_judge = models.BooleanField(default=False)
+    want_to_judge = models.BooleanField(default=False, verbose_name="prefer to judge")
 
     def count_qualified_judges(self):
         return sum(1 for speaker in self.speakers.all() if speaker.is_qualified_as_judge())
@@ -106,9 +106,9 @@ class Attendance(models.Model):
 
 class Debate(models.Model):
     date = models.DateField(default=timezone.localdate)
-    attendance1 = models.ForeignKey(Attendance, on_delete=models.CASCADE, related_name="attendance1_debate")
-    attendance2 = models.ForeignKey(Attendance, on_delete=models.CASCADE, related_name="attendance2_debate")
-    judge = models.ForeignKey(Speaker, null=True, on_delete=models.SET_NULL)
+    attendance1 = models.ForeignKey(Attendance, on_delete=models.CASCADE, related_name="attendance1_debate", null=True)
+    attendance2 = models.ForeignKey(Attendance, on_delete=models.CASCADE, related_name="attendance2_debate", null=True)
+    judges = models.ManyToManyField(Speaker)
     winning_team = models.ForeignKey(Team, null=True, blank=False,
                                         default=None, on_delete=models.CASCADE)
     

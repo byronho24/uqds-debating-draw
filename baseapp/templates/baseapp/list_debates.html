@@ -29,7 +29,7 @@
 
       <div class="row py-1">
         <div class="col-12 text-center">
-          <h6>Judge: {{ debate.judge_name }}</h6>
+          <h6>Judges: {{debate.judges}}</h6>
         </div>
       </div>
     </button>
@@ -69,7 +69,7 @@
 {% endfor %}
 
 {% else %}
-  <h5>Debates for today have not been finalized yet.</h5>
+  <p>Debates for today have not been finalized yet.</p>
 
 {% endif %}
 {% endblock %}

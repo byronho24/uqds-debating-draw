@@ -3,7 +3,7 @@ from django.contrib import admin
 from .models import Team, Speaker, Attendance, Debate, Score
 from .views import record_results
 from django.urls import path, include
-from datetime import datetime
+from django.utils import timezone
 from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
 from django.contrib import messages
 
@@ -47,15 +47,19 @@ class MyTeamAdmin(admin.ModelAdmin):
     list_display = ("name", "count_qualified_judges")
     inlines = [SpeakerInstanceInline]
 
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
 class MyDebateAdmin(admin.ModelAdmin):
     list_display_links = ('date',)
     list_display = (
         'date',
-        'attendance1', 'attendance2', 'judge'
+        'attendance1', 'attendance2'
     )
     list_filter = ('date',)
     # list_editable = (
-    #     'attendance1', 'attendance2', 'judge',
+    #     'attendance1', 'attendance2', 'judges',
     # )
     inlines = [ScoreInstanceInlineForDebate]
     autocomplete_fields = ['attendance1', 'attendance2']
@@ -65,13 +69,15 @@ class MyDebateAdmin(admin.ModelAdmin):
 
     # def formfield_for_foreignkey(self, db_field, request, **kwargs):
     #     if db_field.name == "attendance1" or db_field.name == "attendance2":
-    #         kwargs["queryset"] = Attendance.objects.filter(timestamp__date=datetime.today())
+    #         kwargs["queryset"] = Attendance.objects.filter(timestamp__date=timezone.localdate())
     #     return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
     def get_readonly_fields(self, request, obj):
-        if obj.date != datetime.today():
-            return ("attendance1", "attendance2", 'judge')
+        if obj.date != timezone.localdate():
+            return ("attendance1", "attendance2", 'judges')
+        else:
+            return tuple()
 
     def save_model(self, request, obj, form, change):
         
@@ -85,7 +91,9 @@ class MyDebateAdmin(admin.ModelAdmin):
             team.save()
 
         # Update team judged_before
-        Team.objects.filter(pk=obj.judge.team.id).update(judged_before=True)
+        for judge in obj.judges.all():
+            if not judge.team.judged_before:
+                Team.objects.filter(pk=judge.team.id).update(judged_before=True)
 
     def save_formset(self, request, form, formset, change):
         # get all the objects in the formset
@@ -109,6 +117,9 @@ class MySpeakerAdmin(admin.ModelAdmin):
 class MyScoreAdmin(admin.ModelAdmin):
     list_display = ('speaker', 'debate')
 
+    def has_add_permission(self, request, obj=None):
+        return False
+
 
 class MyAttendanceAdmin(admin.ModelAdmin):
     list_display = ("timestamp", "team", "count_qualified_judges")
@@ -118,9 +129,12 @@ class MyAttendanceAdmin(admin.ModelAdmin):
     ordering = ['-timestamp']
     search_fields = ['team__name']
 
+    def has_add_permission(self, request, obj=None):
+        return False
+
     def get_search_results(self, request, queryset, search_term):
         queryset, use_distinct = super().get_search_results(request, queryset, search_term)
-        queryset = queryset.filter(timestamp__date=datetime.today())
+        queryset = queryset.filter(timestamp__date=timezone.localdate())
         return queryset, use_distinct
 
 

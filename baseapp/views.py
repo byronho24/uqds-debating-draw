@@ -11,6 +11,14 @@ from django.urls import reverse
 from operator import itemgetter
 from itertools import chain
 
+def stringify(l):
+    """ Concatenates list of strings into a comma-separated string. """
+    result = ""
+    for string in l:
+        result += string + ", "
+    # Remove trailing comma and space
+    result = result[:-2]
+    return result
 
 def index(request):
     return render(request, 'baseapp/index.html')
@@ -18,7 +26,9 @@ def index(request):
 def debates(request):
     debates = Debate.objects.filter(date=timezone.localdate())
 
-    context = {}
+    context = {
+        'debates': []
+    }
 
     for debate in debates:
 
@@ -32,7 +42,7 @@ def debates(request):
                 'name': debate.attendance2.team.name,
                 'speakers': debate.attendance2.speakers.all()
             },
-            'judge_name': debate.judge.name
+            'judges': stringify([judge.name for judge in debate.judges.all()])
         })
 
     return render(request, 'baseapp/debates.html', context)
@@ -249,17 +259,15 @@ def filter_debate_details(request):
     return JsonResponse(data)
 
 def generate_debates(request):
-    debates = Debate.objects.filter(date=timezone.localdate())
+    debates = Debate.objects.filter(date=timezone.localdate()).count()
     if debates:
         messages.warning(request, "Debates already generated.")
     else:
         attendances = list(Attendance.objects.filter(timestamp__date=datetime.today()))
         try:
-            debates = allocator.generate_debates(attendances)
+            allocator.generate_debates(attendances)
         except NotEnoughJudgesException as nej:
-            debates = []
             messages.error(request, str(nej))
 
-    # Only show debates for today
     # TODO: fix hard-coded url
-    return HttpResponseRedirect("/admin/baseapp/debate/?date__gte=2019-02-15&date__lt=2019-02-16")
+    return HttpResponseRedirect("/admin/baseapp/debate/")
