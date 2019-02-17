@@ -60,7 +60,7 @@ class DebateInstanceInline(admin.TabularInline):
         if obj.date != timezone.localdate():
             return Debate.objects.filter(match_day=obj).count()
         else:
-            return super().get_max_num(self, request, obj=None, **kwargs)
+            return super().max_num
 
     def get_readonly_fields(self, request, obj):
         if obj.date != timezone.localdate():
@@ -81,13 +81,13 @@ class DebateInstanceInline(admin.TabularInline):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
-        if db_field.name == "judges":
-            try:
-                match_day = MatchDay.objects.get(date=timezone.localdate())
-                kwargs["queryset"] = get_qualified_judges(match_day.attendances_competing.all())
-            except MatchDay.DoesNotExist:
-                # Then no need to change queryset
-                pass
+        # if db_field.name == "judges":
+        #     try:
+        #         match_day = MatchDay.objects.get(date=timezone.localdate())
+        #         kwargs["queryset"] = get_qualified_judges(match_day.attendances_judging.all())
+        #     except MatchDay.DoesNotExist:
+        #         # Then no need to change queryset
+        #         pass
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
     def save_formset(self, request, form, formset, change):
@@ -190,12 +190,17 @@ class MyAttendanceAdmin(admin.ModelAdmin):
 
 class MyMatchDayAdmin(admin.ModelAdmin):
     inlines = [DebateInstanceInline]
-    
+    fields = ('date', 'attendances_competing', 'attendances_judging')
     def get_readonly_fields(self, request, obj):
-        if obj.date != timezone.localdate:
+        if obj.date != timezone.localdate():
             return ('date', 'attendances_judging', 'attendances_competing')
         else:
             return ('date',)
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        if db_field.name == "attendances_competing" or db_field.name == "attendances_judging":
+            kwargs["queryset"] = Attendance.objects.filter(timestamp__date=timezone.localdate())
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 class MyAdminSite(admin.AdminSite):
     site_header = "UQ Debating Society Internals Administration"

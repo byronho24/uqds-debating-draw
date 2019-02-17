@@ -62,9 +62,9 @@ def is_vetoed(initiator: Attendance, receiver: Attendance):
         Returns True if any speaker in 'initiator' has vetoed any speaker in 'receiver'.
         Return False otherwise.
     """
-    attendance1_vetoed_speakers = get_vetoed_speakers_for_attendance(attendance1)
-    for speaker in attendance2.speakers.all():
-        if speaker in attendance1_vetoed_speakers:
+    initiator_vetoed_speakers = get_vetoed_speakers_for_attendance(initiator)
+    for speaker in receiver.speakers.all():
+        if speaker in initiator_vetoed_speakers:
             return True
     return False
 
@@ -134,9 +134,9 @@ def _assign_competing_teams(attendances: List[Attendance]):
     attendances = sorted(attendances, key=_assign_team_judging_score, reverse=True)
 
     # Pop until we have enough qualified judges or we have no teams left
-    while (len(qualified_judges) <  _number_of_debates(attendances) or len(attendances) % 2 != 0) and len(attendances) > 0:
+    while (qualified_judges <  _number_of_debates(attendances) or len(attendances) % 2 != 0) and len(attendances) > 0:
         indexToRemove = 0
-        delta = _number_of_debates(attendances) - len(qualified_judges)
+        delta = _number_of_debates(attendances) - qualified_judges
         attendances_count = len(attendances)
         if attendances_count % 2 != 0 and delta <= 3:
             # In this case we may be able to only pop one more team from PQ
@@ -223,7 +223,7 @@ def _matchmake(match_day: MatchDay):
     # The reason to use another for loop is to make sure that all the debates
     # are generated beforehand, so that if the algorithm can't find a working
     # solution in the end, at least it can give a partially working one
-    for i, debate in debates:
+    for i, debate in enumerate(debates):
         attendance1 = debate.attendance1
         attendance2 = debate.attendance2
 
