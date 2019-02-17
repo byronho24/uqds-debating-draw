@@ -78,7 +78,17 @@ def attendanceform(request):
             if len(form.cleaned_data["speakers"]) > 3:
                 messages.error(request, 'Please select up to 3 speakers.')
                 return HttpResponseRedirect(reverse("baseapp:attendanceform"))
-            form.save()
+            
+            # Update attendance entry if attendance already exists for team, else create
+            obj, created = Attendance.objects.update_or_create(
+                team=form.cleaned_data["team"],
+                date=timezone.localdate(),
+                defaults={
+                    'speakers': form.cleaned_data["speakers"],
+                    'want_to_judge': form.cleaned_data["want_to_judge"]
+                }
+            )
+
             messages.success(request, 'Your attendance has been marked.')
             return HttpResponseRedirect(reverse("baseapp:attendanceform"))
 
@@ -265,7 +275,7 @@ def generate_debates(request):
             "Debates already generated. Please select the matchday for today below to edit the debates."
         )
     else:
-        attendances = list(Attendance.objects.filter(timestamp__date=datetime.today()))
+        attendances = list(Attendance.objects.filter(date=datetime.today()))
         if not attendances:
             messages.warning(request, "There are no attendances yet for today.")
         else:

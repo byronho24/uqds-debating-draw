@@ -19,7 +19,7 @@ class SpeakersLookupForTeamSignup(LookupChannel):
 #     model = Attendance
 
 #     def get_query(self, q, request):
-#         return self.model.objects.filter(timestamp__date=timezone.localdate(), team__name__icontains=q).order_by('team__name')
+#         return self.model.objects.filter(date=timezone.localdate(), team__name__icontains=q).order_by('team__name')
 
 
 # @register('judges_for_debate')

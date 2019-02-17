@@ -95,7 +95,7 @@ class Speaker(models.Model):
 
 class Attendance(models.Model):
 
-    timestamp = models.DateTimeField('timestamp', default=timezone.localtime)
+    date = models.DateTimeField(default=timezone.localdate)
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
     speakers = models.ManyToManyField(Speaker)
     want_to_judge = models.BooleanField(default=False, verbose_name="prefer to judge")
@@ -104,7 +104,7 @@ class Attendance(models.Model):
         return sum(1 for speaker in self.speakers.all() if speaker.is_qualified_as_judge())
 
     def __str__(self):
-        return f"{self.timestamp.strftime(TIME_FORMAT)}  {self.team.name}"
+        return f"{self.date}  {self.team.name}"
 
 
 class Debate(models.Model):
@@ -127,8 +127,8 @@ class Debate(models.Model):
         if self.attendance1 == self.attendance2:
             raise ValidationError('Attendance1 must be different to Attendance2.')
         # Do not allow save if attendances are not in the same day
-        if self.attendance1.timestamp.date() != self.match_day.date or \
-                self.attendance2.timestamp.date() != self.match_day.date:
+        if self.attendance1.date != self.match_day.date or \
+                self.attendance2.date != self.match_day.date:
             raise ValidationError("Date of attendances must match debate's date.")
 
 

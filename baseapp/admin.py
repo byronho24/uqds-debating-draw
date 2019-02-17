@@ -172,11 +172,11 @@ class MyScoreAdmin(admin.ModelAdmin):
 
 
 class MyAttendanceAdmin(admin.ModelAdmin):
-    list_display = ("timestamp", "team", "count_qualified_judges")
-    list_filter = ("timestamp", "team")
+    list_display = ("date", "team", "count_qualified_judges")
+    list_filter = ("date", "team")
 
     # Allow search for attendances by team name
-    ordering = ['-timestamp']
+    ordering = ['-date']
     search_fields = ['team__name']
 
     def has_add_permission(self, request, obj=None):
@@ -184,7 +184,7 @@ class MyAttendanceAdmin(admin.ModelAdmin):
 
     def get_search_results(self, request, queryset, search_term):
         queryset, use_distinct = super().get_search_results(request, queryset, search_term)
-        queryset = queryset.filter(timestamp__date=timezone.localdate())
+        queryset = queryset.filter(date=timezone.localdate())
         return queryset, use_distinct
 
 
@@ -199,7 +199,7 @@ class MyMatchDayAdmin(admin.ModelAdmin):
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "attendances_competing" or db_field.name == "attendances_judging":
-            kwargs["queryset"] = Attendance.objects.filter(timestamp__date=timezone.localdate())
+            kwargs["queryset"] = Attendance.objects.filter(date=timezone.localdate())
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 class MyAdminSite(admin.AdminSite):

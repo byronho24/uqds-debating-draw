@@ -109,22 +109,12 @@ def _assign_competing_teams(attendances: List[Attendance]):
     :ensures: - list of competing attendances have an even number amount of elements and is non-zero
               - len(judges) >= floor(len(attendances_competing) / 2)
     """
-    # Check if multiple Attendance entries exist for any given attending team
-    # If so only consider the most recent entry  
-    attendances = sorted(attendances, key=attrgetter('timestamp'))
-    attendances_dict = {}
-    for attendance in attendances:
-        # Write into dictionary with team id as key - most recent entry for a
-        # given team would overwrite its previous attendance entries
-        attendances_dict[attendance.team.id] = attendance
-    attendances = list(attendances_dict.values())
-
     # Check if we have at least 3 attendances --> minimum amount for a debate with judge
     if len(attendances) < 3:
         raise NotEnoughAttendancesException("Not enough attendances to generate at least one debate.")
 
     # print("Want to judge")
-    # for attendance in Attendance.objects.filter(want_to_judge=True, timestamp__date=datetime.today()).all():
+    # for attendance in Attendance.objects.filter(want_to_judge=True, date=datetime.today()).all():
     #     for speaker in attendance.speakers.all():
     #         print(speaker)
     attendances_judging = []
