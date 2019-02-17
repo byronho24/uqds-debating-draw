@@ -60,6 +60,7 @@ class DebateInstanceInline(admin.TabularInline):
             match_day = MatchDay.objects.get(date=timezone.localdate())
             kwargs["queryset"] = match_day.attendances_competing.all()
         # TODO: order these attendances
+        # TODO: dynamic filtering based on selected teams/judges
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):

@@ -17,7 +17,7 @@ WEIGHTS = {
 def count_qualified_judges(attendance: Attendance):
     sum(1 for speaker in attendance.speakers.all() if speaker.is_qualified_as_judge())
 
-
+# FIXME: algo would end up always having most qualified teams to judge?
 def _assign_team_judging_score(attendance: Attendance):
     # Get data from attendance
     number_attending = len(attendance.speakers.all())
@@ -46,9 +46,9 @@ def get_vetoed_speakers_for_attendance(attendance: Attendance):
             vetoed_speakers.append(vetoed_speaker)
     return vetoed_speakers
 
-def is_vetoed(attendance1: Attendance, attendance2: Attendance):
+def is_vetoed(initiator: Attendance, receiver: Attendance):
     """
-        Returns True if any speaker of attendance1 has vetoed any speaker in attendance2.
+        Returns True if any speaker in 'initiator' has vetoed any speaker in 'receiver'.
         Return False otherwise.
     """
     attendance1_vetoed_speakers = get_vetoed_speakers_for_attendance(attendance1)
@@ -56,6 +56,38 @@ def is_vetoed(attendance1: Attendance, attendance2: Attendance):
         if speaker in attendance1_vetoed_speakers:
             return True
     return False
+
+def find_first_non_vetoed_attendance_in_debate(initiator: Attendance, debate: Debate):
+    """
+    Finds the first attendance in 'debate' that 'initiator' has not vetoed, and returns it.
+    debate.attendance1 comes first, compared to debate.attendance2.
+    Returns None if no such attendance can be found in the 'debate' given.
+    """
+    for attendance in [debate.attendance1, debate.attendance2]:
+        if not is_vetoed(initiator, attendance):
+            return attendance
+    return None
+
+
+def find_attendance_to_swap(attendance_to_swap: Attendance, debate_choices: List[Debate]):
+    """
+    This function is for veto purposes.
+    Finds the earliest attendance in the debates in 'debate_choices' that 'attendance_to_swap' has not vetoed.
+    Returns a tuple that contains (in this order): 
+        - the debate that the found attendance is in
+        - a string, either 'attendance1' or 'attendance2', that signifies which of the attendances in the debate
+          is the found attendance
+
+    debate.attendance1 comes before debate.attendance2.
+    If no such attendance can be found, returns None.
+    """
+    for debate in debate_choices:
+        attendance_available = find_first_non_vetoed_attendance_in_debate(attendance_to_swap, debate)
+        if attendance_available is not None:
+            return (debate, attendance_available)
+
+    # If function has not returned yet, then no attendance can be found to swap with 'attendance_to_swap'
+    return None      
 
 def _assign_competing_teams(attendances: List[Attendance]):
     """
@@ -84,7 +116,6 @@ def _assign_competing_teams(attendances: List[Attendance]):
     # for attendance in Attendance.objects.filter(want_to_judge=True, timestamp__date=datetime.today()).all():
     #     for speaker in attendance.speakers.all():
     #         print(speaker)
-    # FIXME: algo to account for qualified judges
     qualified_judges = []
     judges = 0
 
@@ -148,7 +179,6 @@ def _matchmake(match_day: MatchDay):
     attendances_competing = list(match_day.attendances_competing.all())
     judges = list(match_day.judges.all())
 
-    # TODO: account for vetoes
     sorting_list = []
     for attendance in attendances_competing:
         team = attendance.team
@@ -158,47 +188,53 @@ def _matchmake(match_day: MatchDay):
     attendances_competing = [item[2] for item in sorting_list]
 
     debates = []
+    number_of_debates = _number_of_debates(attendances_competing)
     # Generate the debate objects
-    for i in range(0, _number_of_debates(attendances_competing)):
-        # Remove first two attendances from PQ
-        attendance1 = attendances_competing.pop(0)
-        attendance2 = attendances_competing.pop(0)
-
-        # Check for vetoes --> doesn't matter who initiated the veto
-        if is_vetoed(attendance1, attendance2) or is_vetoed(attendance2, attendance1):
-            # Swap attendance2 (the lower ranked out of [attendance1, attendance2])
-            #  with highest ranked non-vetoed team ranked below
-            for attendance_to_swap in attendances_competing:
-                if not is_vetoed(attendance2, attendance_to_swap):
-                    # TODO: use a deque?
-                    # Prepend original attendance2 back into PQ
-                    attendances_competing.insert(0, attendance2)
-                    # Remove attendance_to_swap from PQ
-                    attendance2 = attendance_to_swap
-                    attendances_competing.remove(attendance_to_swap)
-                    break
-            else:
-                # No team found for swap!
-                # For now raise an error
-                raise CannotFindWorkingConfigurationException(
-                    "Cannot find debates that satisfy veto criteria."
-                )
+    for i in range(0, number_of_debates):
+        attendance1 = attendances_competing[i*2]
+        attendance2 = attendances_competing[i*2 + 1]
 
         debate = Debate()
         debate.match_day = match_day
         debate.attendance1 = attendance1
         debate.attendance2 = attendance2
+        debate.save() # For ManyToManyRelation
 
+        # Assign judges - do this circularly (i.e. if there are excess judges
+        # assign to higher ranked debates in order)
+        judge_indices = range(i, len(judges), number_of_debates)
+        for judge_index in judge_indices:
+            debate.judges.add(judges[judge_index])
+        debate.save()
         debates.append(debate)
 
-    # Save the debates (now that the configuration must be a valid one)
-    for debate in debates:
-        debate.save()
-    
-    # Assign judges to the debates
-    for i, judge in enumerate(judges):
-        # Assign excess judges to the highest-ranked debates
-        debates[i % len(debates)].judges.add(judge)
+    # Check for vetoes
+    # The reason to use another for loop is to make sure that all the debates
+    # are generated beforehand, so that if the algorithm can't find a working
+    # solution in the end, at least it can give a partially working one
+    for i, debate in debates:
+        attendance1 = debate.attendance1
+        attendance2 = debate.attendance2
+
+        if is_vetoed(attendance1, attendance2) or is_vetoed(attendance2, attendance1):
+            # Swap attendance2 (since it is lower ranked) with the highest ranked non-vetoed
+            # attendance ranked below
+            debates_below = [debates[j] for j in range(i+1, len(debates))]
+            swap_details = find_attendance_to_swap(attendance2, debates_below)
+            if swap_details is not None:
+                debate_to_swap, attendance_attr = swap_details
+                # Swap debate.attendance2 with attendace_to_swap
+                debate.attendance2 = getattr(debate_to_swap, attendance_attr)
+                if attendance_attr == "attendance1":
+                    debate_to_swap.attendance1 = attendance2 
+                elif attendance_attr == "attendance2":
+                    debate_to_swap.attendance2 = attendance2
+            else:
+                # No available attendance to swap with - raise exception for now
+                raise CannotFindWorkingConfigurationException(
+                    "Cannot allocate debates that satisfy veto criteria - please allocate debates manually."
+                )
+                # TODO: use a status code instead?
 
     return match_day
 
