@@ -135,8 +135,8 @@ class Debate(models.Model):
 class MatchDay(models.Model):
     """ Saves the debates for a specific match day."""
     date = models.DateField(default=timezone.localdate, unique=True)
-    attendances_competing = models.ManyToManyField(Attendance)
-    judges = models.ManyToManyField(Speaker)
+    attendances_competing = models.ManyToManyField(Attendance, related_name="competing_matchdays")
+    attendances_judging = models.ManyToManyField(Attendance, related_name="judging_matchdays")
 
     def __str__(self):
         return f"{self.date}"

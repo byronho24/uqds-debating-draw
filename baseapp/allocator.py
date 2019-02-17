@@ -39,6 +39,17 @@ def _assign_team_judging_score(attendance: Attendance):
 def _number_of_debates(attendances: List[Attendance]):
     return math.floor(len(attendances) / 2)
 
+def get_qualified_judges(attendances_judging):
+    """
+    Returns the qualified judges within the attendances given.
+    """
+    qualified_judges = []
+    for attendance in attendances_judging:
+        for judge in attendance.speakers.all():
+            if judge.is_qualified_as_judge():
+                qualified_judges.append(judge)
+    return qualified_judges
+
 def get_vetoed_speakers_for_attendance(attendance: Attendance):
     vetoed_speakers = []
     for speaker in attendance.speakers.all():
@@ -116,8 +127,8 @@ def _assign_competing_teams(attendances: List[Attendance]):
     # for attendance in Attendance.objects.filter(want_to_judge=True, timestamp__date=datetime.today()).all():
     #     for speaker in attendance.speakers.all():
     #         print(speaker)
-    qualified_judges = []
-    judges = 0
+    attendances_judging = []
+    qualified_judges = 0
 
     # Sort teams based on judging score
     attendances = sorted(attendances, key=_assign_team_judging_score, reverse=True)
@@ -138,10 +149,10 @@ def _assign_competing_teams(attendances: List[Attendance]):
                     break
         # Remove item at indexToRemove from PQ (defaults to 0, but if seek forward finds a better match this would be non-zero)
         judging_attendance = attendances.pop(indexToRemove)
+        attendances_judging.append(judging_attendance)
         for judge in judging_attendance.speakers.all():
-            judges += 1
             if judge.is_qualified_as_judge():
-                qualified_judges.append(judge)
+                qualified_judges += 1
 
     # print(f"Debates: { _number_of_debates(attendances)}")
     # print(f"Judges: {judges}")
@@ -156,8 +167,8 @@ def _assign_competing_teams(attendances: List[Attendance]):
     match_day.save()
     for attendance in attendances:
         match_day.attendances_competing.add(attendance)
-    for judge in qualified_judges:
-        match_day.judges.add(judge)
+    for attendance_judging in attendances_judging:
+        match_day.attendances_judging.add(attendance_judging)
     match_day.save()
 
     return match_day
@@ -177,7 +188,7 @@ def _matchmake(match_day: MatchDay):
     Debate.objects.filter(match_day=match_day).delete()
 
     attendances_competing = list(match_day.attendances_competing.all())
-    judges = list(match_day.judges.all())
+    judges = get_qualified_judges(match_day.attendances_judging.all())
 
     sorting_list = []
     for attendance in attendances_competing:

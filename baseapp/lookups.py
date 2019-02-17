@@ -13,21 +13,21 @@ class SpeakersLookupForTeamSignup(LookupChannel):
     def format_item_display(self, item):
         return f"<span class='speaker'>{item.name}</span>"
 
-@register('attendances_for_debate')
-class AttendancesLookupForDebate(LookupChannel):
+# @register('attendances_for_debate')
+# class AttendancesLookupForDebate(LookupChannel):
 
-    model = Attendance
+#     model = Attendance
 
-    def get_query(self, q, request):
-        return self.model.objects.filter(timestamp__date=timezone.localdate(), team__name__icontains=q).order_by('team__name')
+#     def get_query(self, q, request):
+#         return self.model.objects.filter(timestamp__date=timezone.localdate(), team__name__icontains=q).order_by('team__name')
 
 
-@register('judges_for_debate')
-class JudgesLookupForDebate(LookupChannel):
+# @register('judges_for_debate')
+# class JudgesLookupForDebate(LookupChannel):
 
-    model = Speaker
+#     model = Speaker
 
-    def get_query(self, q, request):
-        match_day = MatchDay.objects.get(date=timezone.localdate())
-        return match_day.judges.filter(name__icontains=q)
+#     def get_query(self, q, request):
+#         match_day = MatchDay.objects.get(date=timezone.localdate())
+#         return match_day.judges.filter(name__icontains=q)
     

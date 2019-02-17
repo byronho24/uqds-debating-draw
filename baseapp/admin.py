@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
 from django.contrib import messages
 from ajax_select import make_ajax_form
+from .allocator import get_qualified_judges
 
 
 class ScoreInstanceInlineForDebate(admin.TabularInline):
@@ -83,7 +84,7 @@ class DebateInstanceInline(admin.TabularInline):
         if db_field.name == "judges":
             try:
                 match_day = MatchDay.objects.get(date=timezone.localdate())
-                kwargs["queryset"] = match_day.attendances_competing.all()
+                kwargs["queryset"] = get_qualified_judges(match_day.attendances_competing.all())
             except MatchDay.DoesNotExist:
                 # Then no need to change queryset
                 pass
@@ -189,8 +190,12 @@ class MyAttendanceAdmin(admin.ModelAdmin):
 
 class MyMatchDayAdmin(admin.ModelAdmin):
     inlines = [DebateInstanceInline]
-    readonly_fields = ["date"]
-    fields = ('date',)
+    
+    def get_readonly_fields(self, request, obj):
+        if obj.date != timezone.localdate:
+            return ('date', 'attendances_judging', 'attendances_competing')
+        else:
+            return ('date',)
 
 class MyAdminSite(admin.AdminSite):
     site_header = "UQ Debating Society Internals Administration"
