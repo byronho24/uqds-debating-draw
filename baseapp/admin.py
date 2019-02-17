@@ -55,18 +55,38 @@ class DebateInstanceInline(admin.TabularInline):
     #     'judges': 'judges_for_debate'
     # })
 
+    def get_max_num(self, request, obj=None, **kwargs):
+        if obj.date != timezone.localdate():
+            return Debate.objects.filter(match_day=obj).count()
+        else:
+            return super().get_max_num(self, request, obj=None, **kwargs)
+
+    def get_readonly_fields(self, request, obj):
+        if obj.date != timezone.localdate():
+            return ("attendance1", "attendance2", 'judges')
+        else:
+            return tuple()
+
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "attendance1" or db_field.name == "attendance2":
-            match_day = MatchDay.objects.get(date=timezone.localdate())
-            kwargs["queryset"] = match_day.attendances_competing.all()
+            try:
+                match_day = MatchDay.objects.get(date=timezone.localdate())
+                kwargs["queryset"] = match_day.attendances_competing.all()
+            except MatchDay.DoesNotExist:
+                # Then no need to change queryset
+                pass
         # TODO: order these attendances
         # TODO: dynamic filtering based on selected teams/judges
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "judges":
-            match_day = MatchDay.objects.get(date=timezone.localdate())
-            kwargs["queryset"] =  match_day.judges.all()
+            try:
+                match_day = MatchDay.objects.get(date=timezone.localdate())
+                kwargs["queryset"] = match_day.attendances_competing.all()
+            except MatchDay.DoesNotExist:
+                # Then no need to change queryset
+                pass
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
     def save_formset(self, request, form, formset, change):
