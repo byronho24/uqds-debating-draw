@@ -14,7 +14,10 @@ class TeamAttendanceForm(forms.ModelForm):
             'want_to_judge': 
                     "Note that this does not guarantee that you would judge/not judge; but "+\
                         "if checked, this would inform the allocation system to place your team at a higher "+\
-                            "priority for judging."
+                            "priority for judging.",
+            'team': 
+                    "Your team can change your attendance as many times as you like - only the " +\
+                        "most recent one would be recorded."
         }
 
 

@@ -124,7 +124,7 @@ class MyDebateAdmin(admin.ModelAdmin):
     #     'attendance1', 'attendance2', 'judges',
     # )
     inlines = [ScoreInstanceInlineForDebate]
-    autocomplete_fields = ['attendance1', 'attendance2']
+    # autocomplete_fields = ['attendance1', 'attendance2']
 
     def has_add_permission(self, request, obj=None):
         return False
@@ -175,17 +175,17 @@ class MyAttendanceAdmin(admin.ModelAdmin):
     list_display = ("date", "team", "count_qualified_judges")
     list_filter = ("date", "team")
 
-    # Allow search for attendances by team name
-    ordering = ['-date']
-    search_fields = ['team__name']
+    # # Allow search for attendances by team name
+    # ordering = ['-date']
+    # search_fields = ['team__name']
 
     def has_add_permission(self, request, obj=None):
         return False
 
-    def get_search_results(self, request, queryset, search_term):
-        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
-        queryset = queryset.filter(date=timezone.localdate())
-        return queryset, use_distinct
+    # def get_search_results(self, request, queryset, search_term):
+    #     queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+    #     queryset = queryset.filter(date=timezone.localdate())
+    #     return queryset, use_distinct
 
 
 class MyMatchDayAdmin(admin.ModelAdmin):

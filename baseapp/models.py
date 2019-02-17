@@ -95,7 +95,7 @@ class Speaker(models.Model):
 
 class Attendance(models.Model):
 
-    date = models.DateTimeField(default=timezone.localdate)
+    date = models.DateField(default=timezone.localdate)
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
     speakers = models.ManyToManyField(Speaker)
     want_to_judge = models.BooleanField(default=False, verbose_name="prefer to judge")

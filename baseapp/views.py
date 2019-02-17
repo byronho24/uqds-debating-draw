@@ -80,16 +80,20 @@ def attendanceform(request):
                 return HttpResponseRedirect(reverse("baseapp:attendanceform"))
             
             # Update attendance entry if attendance already exists for team, else create
-            obj, created = Attendance.objects.update_or_create(
+            attendance, created = Attendance.objects.update_or_create(
                 team=form.cleaned_data["team"],
                 date=timezone.localdate(),
                 defaults={
-                    'speakers': form.cleaned_data["speakers"],
                     'want_to_judge': form.cleaned_data["want_to_judge"]
                 }
             )
+            attendance.speakers.set(form.cleaned_data["speakers"])
+            attendance.save()
 
-            messages.success(request, 'Your attendance has been marked.')
+            if created:
+                messages.success(request, "Your attendance has been marked.")
+            else:
+                messages.success(request, 'Your attendance has been updated.')
             return HttpResponseRedirect(reverse("baseapp:attendanceform"))
 
     form = TeamAttendanceForm()
