@@ -37,15 +37,14 @@ def _assign_team_judging_score(attendance: Attendance):
 def _number_of_debates(attendances_count: int):
     return math.floor(attendances_count / 2)
 
-def get_qualified_judges(attendances_judging):
+def get_qualified_judges(attendance):
     """
-    Returns the qualified judges within the attendances given.
+    Returns the qualified judges within the attendance given.
     """
     qualified_judges = []
-    for attendance in attendances_judging:
-        for judge in attendance.speakers.all():
-            if judge.is_qualified_as_judge():
-                qualified_judges.append(judge)
+    for judge in attendance.speakers.all():
+        if judge.is_qualified_as_judge():
+            qualified_judges.append(judge)
     return qualified_judges
 
 def get_vetoed_speakers_for_attendance(attendance: Attendance):
@@ -100,7 +99,7 @@ def find_attendance_to_swap(attendance_to_swap: Attendance, debate_choices: List
 
 def can_host_debates(attendances_competing, judges_count: int):
     attendances_competing_count = len(attendances_competing)
-    return (qualified_judges >=  _number_of_debates(attendances_competing_count) \
+    return (judges_count >=  _number_of_debates(attendances_competing_count) \
             or attendances_competing_count % 2 == 0)
 
 def _assign_competing_teams(attendances: List[Attendance]):
@@ -118,8 +117,9 @@ def _assign_competing_teams(attendances: List[Attendance]):
 
     # Only consider attendances with at least one qualified judge when assigning judges
     qualified_attendances, unqualified_attendances = [], []
-    qualified_attendances.append(attendance) if get_qualified_judges(attendance) \
-        else unqualified_attendances.append(attendance)
+    for attendance in attendances:
+        qualified_attendances.append(attendance) if get_qualified_judges(attendance) \
+            else unqualified_attendances.append(attendance)
     # Sort qualified attendance based on judging score
     qualified_attendances.sort(key=_assign_team_judging_score, reverse=True)
 
@@ -140,7 +140,7 @@ def _assign_competing_teams(attendances: List[Attendance]):
             # Seek forward to see which team (if any) matches required number of qualified judges
             for i in range(1, min(SEEK_FORWARD_LIMIT, qualified_attenances_count)):
                 potential_attendance = attendances_competing[i]
-                if count_qualified_judges(potetial_attendance) == delta:
+                if count_qualified_judges(potential_attendance) == delta:
                     indexToRemove = i
                     break
         # Remove item at indexToRemove from PQ (defaults to 0, but if seek forward finds a better match this would be non-zero)
@@ -179,8 +179,12 @@ def _matchmake(match_day: MatchDay):
     # Clear any existing debates for the day
     Debate.objects.filter(match_day=match_day).delete()
 
-    attendances_competing = list(match_day.attendances_competing.all())
-    judges = get_qualified_judges(match_day.attendances_judging.all())
+    attendances_competing = match_day.attendances_competing.all()
+    judges = []
+
+    for attendance in match_day.attendances_judging.all():
+        for judge in get_qualified_judges(attendance):
+            judges.append(judge)
 
     sorting_list = []
     for attendance in attendances_competing:
