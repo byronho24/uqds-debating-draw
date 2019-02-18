@@ -41,12 +41,12 @@ def debates(request):
         context['debates'].append({
             'debate_id': debate.id,
             'team1': {
-                'name': debate.attendance1.team.name,
-                'speakers': debate.attendance1.speakers.all()
+                'name': debate.affirmative.team.name,
+                'speakers': debate.affirmative.speakers.all()
             },
             'team2': {
-                'name': debate.attendance2.team.name,
-                'speakers': debate.attendance2.speakers.all()
+                'name': debate.negative.team.name,
+                'speakers': debate.negative.speakers.all()
             },
             'judges': stringify([judge.name for judge in debate.judges.all()])
         })
@@ -61,12 +61,12 @@ def detail(request, debate_id: int):
     context = {
         'debate_id': debate.id,
         'team1': {
-            'name': debate.attendance1.team.name,
-            'speakers': debate.attendance1.team.speaker_set.all()
+            'name': debate.affirmative.team.name,
+            'speakers': debate.affirmative.team.speaker_set.all()
         },
         'team2': {
-            'name': debate.attendance2.team.name,
-            'speakers': debate.attendance2.team.speaker_set.all()
+            'name': debate.negative.team.name,
+            'speakers': debate.negative.team.speaker_set.all()
         },
     }
     return render(request, 'baseapp/debate_detail.html', context)
@@ -183,8 +183,8 @@ def table(request):
 #     debate = Debate.objects.get(pk=debate_id)
 
 #     if request.method == "POST":
-#         speaker_ids = [speaker.id for speaker in debate.attendance1.speakers.all()] + \
-#                             [speaker.id for speaker in debate.attendance2.speakers.all()]
+#         speaker_ids = [speaker.id for speaker in debate.affirmative.speakers.all()] + \
+#                             [speaker.id for speaker in debate.negative.speakers.all()]
 #         winning_team_form = DebateResultsForm(request.POST)
 #         speaker_score_forms = [ScoreForm(request.POST, prefix=str(id))
 #                                    for id in speaker_ids]

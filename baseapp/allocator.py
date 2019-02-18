@@ -68,10 +68,10 @@ def is_vetoed(initiator: Attendance, receiver: Attendance):
 def find_first_non_vetoed_attendance_in_debate(initiator: Attendance, debate: Debate):
     """
     Finds the first attendance in 'debate' that 'initiator' has not vetoed, and returns it.
-    debate.attendance1 comes first, compared to debate.attendance2.
+    debate.affirmative comes first, compared to debate.negative.
     Returns None if no such attendance can be found in the 'debate' given.
     """
-    for attendance in [debate.attendance1, debate.attendance2]:
+    for attendance in [debate.affirmative, debate.negative]:
         if not is_vetoed(initiator, attendance):
             return attendance
     return None
@@ -83,10 +83,10 @@ def find_attendance_to_swap(attendance_to_swap: Attendance, debate_choices: List
     Finds the earliest attendance in the debates in 'debate_choices' that 'attendance_to_swap' has not vetoed.
     Returns a tuple that contains (in this order): 
         - the debate that the found attendance is in
-        - a string, either 'attendance1' or 'attendance2', that signifies which of the attendances in the debate
+        - a string, either 'affirmative' or 'negative', that signifies which of the attendances in the debate
           is the found attendance
 
-    debate.attendance1 comes before debate.attendance2.
+    debate.affirmative comes before debate.negative.
     If no such attendance can be found, returns None.
     """
     for debate in debate_choices:
@@ -98,6 +98,13 @@ def find_attendance_to_swap(attendance_to_swap: Attendance, debate_choices: List
     return None      
 
 def can_host_debates(attendances_competing, judges_count: int):
+    """
+    Returns True if both of these conditions are true:
+        1. 'judge_count' is large enough to host the debates where 'attendances_competing'
+        would partake in
+        2. 'attendances_competing' has an even number of elements.
+    Returns False otherwise.
+    """
     attendances_competing_count = len(attendances_competing)
     return (judges_count >=  _number_of_debates(attendances_competing_count) \
             and attendances_competing_count % 2 == 0)
@@ -198,13 +205,13 @@ def _matchmake(match_day: MatchDay):
     number_of_debates = _number_of_debates(len(attendances_competing))
     # Generate the debate objects
     for i in range(0, number_of_debates):
-        attendance1 = attendances_competing[i*2]
-        attendance2 = attendances_competing[i*2 + 1]
+        affirmative = attendances_competing[i*2]
+        negative = attendances_competing[i*2 + 1]
 
         debate = Debate()
         debate.match_day = match_day
-        debate.attendance1 = attendance1
-        debate.attendance2 = attendance2
+        debate.affirmative = affirmative
+        debate.negative = negative
         debate.save() # For ManyToManyRelation
 
         # Assign judges - do this circularly (i.e. if there are excess judges
@@ -220,26 +227,26 @@ def _matchmake(match_day: MatchDay):
     # are generated beforehand, so that if the algorithm can't find a working
     # solution in the end, at least it can give a partially working one
     for i, debate in enumerate(debates):
-        attendance1 = debate.attendance1
-        attendance2 = debate.attendance2
+        affirmative = debate.affirmative
+        negative = debate.negative
 
-        if is_vetoed(attendance1, attendance2) or is_vetoed(attendance2, attendance1):
-            # Swap attendance2 (since it is lower ranked) with the highest ranked non-vetoed
+        if is_vetoed(affirmative, negative) or is_vetoed(negative, affirmative):
+            # Swap negative (since it is lower ranked) with the highest ranked non-vetoed
             # attendance ranked below
             debates_below = [debates[j] for j in range(i+1, len(debates))]
-            swap_details = find_attendance_to_swap(attendance2, debates_below)
+            swap_details = find_attendance_to_swap(negative, debates_below)
             if swap_details is not None:
                 debate_to_swap, attendance_attr = swap_details
-                # Swap debate.attendance2 with attendace_to_swap
-                debate.attendance2 = getattr(debate_to_swap, attendance_attr)
-                if attendance_attr == "attendance1":
-                    debate_to_swap.attendance1 = attendance2 
-                elif attendance_attr == "attendance2":
-                    debate_to_swap.attendance2 = attendance2
+                # Swap debate.negative with attendace_to_swap
+                debate.negative = getattr(debate_to_swap, attendance_attr)
+                if attendance_attr == "affirmative":
+                    debate_to_swap.affirmative = negative 
+                elif attendance_attr == "negative":
+                    debate_to_swap.negative = negative
             else:
                 # No available attendance to swap with - raise exception for now
                 raise CannotFindWorkingConfigurationException(
-                    "Cannot allocate debates that satisfy veto criteria - please allocate debates manually."
+                    "Cannot allocate debates that satisfy veto criteria - you may wish to change the debates generated."
                 )
                 # TODO: use a status code instead?
 

@@ -49,11 +49,11 @@ class DebateInstanceInline(admin.TabularInline):
     extra = 0
     can_delete = False
     exclude = ["winning_team"]
-    # autocomplete_fields = ["attendance1", "attendance2"]
+    # autocomplete_fields = ["affirmative", "negative"]
     show_change_link = True
     # form = make_ajax_form(Debate, {
-    #     'attendance1': 'attendances_for_debate',
-    #     'attendance2': 'attendances_for_debate',
+    #     'affirmative': 'attendances_for_debate',
+    #     'negative': 'attendances_for_debate',
     #     'judges': 'judges_for_debate'
     # })
 
@@ -65,12 +65,12 @@ class DebateInstanceInline(admin.TabularInline):
 
     def get_readonly_fields(self, request, obj):
         if obj and obj.date != timezone.localdate():
-            return ("attendance1", "attendance2", 'judges')
+            return ("affirmative", "negative", 'judges')
         else:
             return tuple()
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "attendance1" or db_field.name == "attendance2":
+        if db_field.name == "affirmative" or db_field.name == "negative":
             try:
                 match_day = MatchDay.objects.get(date=timezone.localdate())
                 kwargs["queryset"] = match_day.attendances_competing.all()
@@ -118,14 +118,14 @@ class MyTeamAdmin(admin.ModelAdmin):
 
 class MyDebateAdmin(admin.ModelAdmin):
     list_display = (
-        'match_day', 'attendance1', 'attendance2'
+        'match_day', 'affirmative', 'negative'
     )
     list_filter = ('match_day',)
     # list_editable = (
-    #     'attendance1', 'attendance2', 'judges',
+    #     'affirmative', 'negative', 'judges',
     # )
     inlines = [ScoreInstanceInlineForDebate]
-    # autocomplete_fields = ['attendance1', 'attendance2']
+    # autocomplete_fields = ['affirmative', 'negative']
 
     def has_add_permission(self, request, obj=None):
         return False
@@ -133,7 +133,7 @@ class MyDebateAdmin(admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj):
         if obj.match_day.date != timezone.localdate():
-            return ("attendance1", "attendance2", 'judges')
+            return ("affirmative", "negative", 'judges')
         else:
             return tuple()
 

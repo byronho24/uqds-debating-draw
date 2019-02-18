@@ -109,8 +109,8 @@ class Attendance(models.Model):
 
 class Debate(models.Model):
     match_day = models.ForeignKey('MatchDay', on_delete=models.CASCADE, null=True)
-    attendance1 = models.ForeignKey(Attendance, on_delete=models.CASCADE, related_name="attendance1_debate", null=True)
-    attendance2 = models.ForeignKey(Attendance, on_delete=models.CASCADE, related_name="attendance2_debate", null=True)
+    affirmative = models.ForeignKey(Attendance, verbose_name="Affirmative team", on_delete=models.CASCADE, related_name="debates_affirmative", null=True)
+    negative = models.ForeignKey(Attendance, verbose_name="Negative team", on_delete=models.CASCADE, related_name="debates_negative", null=True)
     judges = models.ManyToManyField(Speaker)
     winning_team = models.ForeignKey(Team, null=True, blank=False,
                                         default=None, on_delete=models.CASCADE,
@@ -120,15 +120,15 @@ class Debate(models.Model):
         return f"{self.match_day}"
 
     def get_attendances(self):
-        return [self.attendance1, self.attendance2]
+        return [self.affirmative, self.negative]
 
     def clean(self):
-        # Do not allow save if attendance1 == attendance2
-        if self.attendance1 == self.attendance2:
-            raise ValidationError('Attendance1 must be different to Attendance2.')
+        # Do not allow save if affirmative == negative
+        if self.affirmative == self.negative:
+            raise ValidationError('Debate must be held between two different teams.')
         # Do not allow save if attendances are not in the same day
-        if self.attendance1.date != self.match_day.date or \
-                self.attendance2.date != self.match_day.date:
+        if self.affirmative.date != self.match_day.date or \
+                self.negative.date != self.match_day.date:
             raise ValidationError("Date of attendances must match debate's date.")
 
 
