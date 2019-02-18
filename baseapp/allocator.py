@@ -64,6 +64,23 @@ def get_qualified_judges(attendance):
             qualified_judges.append(judge)
     return qualified_judges
 
+def get_attr_for_attendance(debate: Debate, attendance: Attendance):
+    """
+    Returns the attribute name (either 'affirmative' or 'negative') of the given attendance
+    in the debate given.
+    i.e. if debate.affirmative == attendance, then this function return 'affirmative', etc.
+
+    Raises an ValueError if given attendance is not in the given debate.
+    """
+    affirmative = debate.affirmative
+    negative = debate.negative
+    if attendance == affirmative:
+        return "affirmative"
+    elif attendance == negative:
+        return "negative"
+    else:
+        raise ValueError("Given attendance is not in the given debate.")
+
 def get_vetoed_speakers_for_attendance(attendance: Attendance):
     vetoed_speakers = []
     for speaker in attendance.speakers.all():
@@ -84,13 +101,17 @@ def is_vetoed(initiator: Attendance, receiver: Attendance):
 
 def find_highest_ranked_non_vetoed_attendance_in_debate(initiator: Attendance, debate: Debate):
     """
-    Finds the highest ranked attendance in 'debate' that 'initiator' has not vetoed, and returns it.
+    Finds the highest ranked attendance in 'debate' that 'initiator' has not vetoed.
+    Returns a string, either 'affirmative' or 'negative', which indicates the corresponding attendance.
+    If both teams in the debate have the same ranking, returns 'affirmative' (for now).
     Returns None if no such attendance can be found in the 'debate' given.
+
+    :ensures: returns either 'affirmative', 'negative', or None
     """
     attendances = rank_attendances([debate.affirmative, debate.negative])
     for attendance in attendances:
         if not is_vetoed(initiator, attendance):
-            return attendance
+            return get_attr_for_attendance(debate, attendance)
     return None
 
 
@@ -189,6 +210,17 @@ def _assign_competing_teams(attendances: List[Attendance]):
     return match_day
     
 
+def compare_aff_neg(team: Team):
+        """
+        Finds the number of times the team given has been the affirmative/negative side
+        in the debates in the tournament.
+
+        Returns the affirmative count - negative count.
+        """
+        aff_count = Debate.objects.filter(affirmative__team=team).count()
+        neg_count = Debate.objects.filter(negative__team=team).count()
+        return aff_count - neg_count
+
 def get_attendance_higher_aff_neg_diff(attendance1: Attendance, attendance2: Attendance):
     """
     Returns the attendance out of 'attendance1' and 'attendance2' whose team has the 
@@ -201,9 +233,9 @@ def get_attendance_higher_aff_neg_diff(attendance1: Attendance, attendance2: Att
 
     :ensures: returned value is either 'attendance1' or 'attendance2'
     """
-    if attendance1.team.compare_aff_neg() > attendance2.team.compare_aff_neg():
+    if compare_aff_neg(attendance1.team) > compare_aff_neg(attendance2.team):
         return attendance1
-    elif attendance1.team.compare_aff_neg() < attendance2.team.compare_aff_neg():
+    elif compare_aff_neg(attendance1.team) < compare_aff_neg(attendance2.team):
         return attendance2
     else:
         from random import randint
@@ -240,11 +272,9 @@ def _matchmake(match_day: MatchDay):
         attendance1 = attendances_competing[i*2]
         attendance2 = attendances_competing[i*2 + 1]
 
-        
-        
         debate = Debate()
         debate.match_day = match_day
-        # Check each team's affirmative/negative ratio in past debates
+        # Check each team's affirmative/negative diff in past debates
         # Try to make it so that each team has roughly an equal share of
         # being affirmative or negative in the tournament's debates
         if get_attendance_higher_aff_neg_diff(attendance1, attendance2) == attendance1:
@@ -272,18 +302,26 @@ def _matchmake(match_day: MatchDay):
         negative = debate.negative
 
         if is_vetoed(affirmative, negative) or is_vetoed(negative, affirmative):
-            # Swap negative (since it is lower ranked) with the highest ranked non-vetoed
+            # Swap lower ranked team in debate with the highest ranked non-vetoed
             # attendance ranked below
             debates_below = [debates[j] for j in range(i+1, len(debates))]
-            swap_details = find_attendance_to_swap(negative, debates_below)
+            lower_ranked_team = rank_attendances([affirmative, negative])[1]
+            lower_ranked_team_attr = get_attr_for_attendance(debate, lower_ranked_team)
+            swap_details = find_attendance_to_swap(lower_ranked_team, debates_below)
             if swap_details is not None:
                 debate_to_swap, attendance_attr = swap_details
-                # Swap debate.negative with attendace_to_swap
-                debate.negative = getattr(debate_to_swap, attendance_attr)
+                attendance_to_swap = getattr(debate_to_swap, attendance_attr)
+                # Swap lower_ranked_team with attendace_to_swap
+                if lower_ranked_team_attr == "affirmative":
+                    debate.affirmative = attendance_to_swap
+                elif lower_ranked_team_attr == "negative":
+                    debate.negative = attendance_to_swap
                 if attendance_attr == "affirmative":
-                    debate_to_swap.affirmative = negative 
+                    debate_to_swap.affirmative = lower_ranked_team
                 elif attendance_attr == "negative":
-                    debate_to_swap.negative = negative
+                    debate_to_swap.negative = lower_ranked_team
+                debate.save()
+                debate_to_swap.save()
             else:
                 # No available attendance to swap with - raise exception for now
                 raise CannotFindWorkingConfigurationException(
