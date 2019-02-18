@@ -17,7 +17,7 @@ def count_qualified_judges(attendance: Attendance):
     sum(1 for speaker in attendance.speakers.all() if speaker.is_qualified_as_judge())
 
 # FIXME: algo would end up always having most qualified teams to judge?
-# FIXME: sometimes would end up that we have enough qualified judges but the team with the qualified judges aren't ranked top
+# --> Actually maybe not - since we take into account never_judged
 def _assign_team_judging_score(attendance: Attendance):
     # Get data from attendance
     number_attending = len(attendance.speakers.all())
@@ -100,7 +100,7 @@ def find_attendance_to_swap(attendance_to_swap: Attendance, debate_choices: List
 def can_host_debates(attendances_competing, judges_count: int):
     attendances_competing_count = len(attendances_competing)
     return (judges_count >=  _number_of_debates(attendances_competing_count) \
-            or attendances_competing_count % 2 == 0)
+            and attendances_competing_count % 2 == 0)
 
 def _assign_competing_teams(attendances: List[Attendance]):
     """
@@ -135,7 +135,7 @@ def _assign_competing_teams(attendances: List[Attendance]):
             and qualified_attenances_count > 0:
         indexToRemove = 0
         delta = _number_of_debates(len(attendances_competing)) - qualified_judges_count
-        if len(attendances_competing) % 2 != 0 and delta <= 3:
+        if len(attendances_competing) % 2 != 0 and 0 < delta <= 3:
             # In this case we may be able to only pop one more team from PQ
             # Seek forward to see which team (if any) matches required number of qualified judges
             for i in range(1, min(SEEK_FORWARD_LIMIT, qualified_attenances_count)):

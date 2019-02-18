@@ -96,9 +96,12 @@ def attendanceform(request):
                 messages.success(request, 'Your attendance has been updated.')
             return HttpResponseRedirect(reverse("baseapp:attendanceform"))
 
+    # Only show form if MatchDay has not been finalised
     form = TeamAttendanceForm()
     context = {
         'form': form,
+        'show_form': True
+        # 'show_form': MatchDay.objects.filter(date=timezone.localdate()).exists()
     }
     return render(request, 'baseapp/attendanceform.html', context)
 
@@ -137,7 +140,11 @@ def signupform(request):
             messages.error(request, "Form invalid - either no speakers were selected or team name has already been taken.")
 
     form = TeamSignupForm()
-    return render(request, 'baseapp/signupform.html', {'form': form})
+    context = {
+        'form': form,
+        'show_form': True
+    }
+    return render(request, 'baseapp/signupform.html', context)
 
 def table(request):
     # Gets all the teams

@@ -18,6 +18,10 @@
 {{ form|crispy}}
 {% endblock %}
 
+{% block hide_form_msg %}
+  <p>Team attendance marking is now closed.</p>
+{% endblock %}
+
 {% block nav-item %}attendanceform{% endblock %}
 
 {% block body_js %}

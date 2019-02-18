@@ -27,14 +27,17 @@
 
 {% block before_form %}{% endblock %}
 
-<form class="form" method="post">
-  {% csrf_token %}
-  {% block form %}
-    {{ form.media }}
-    {{ form|crispy }}
-  {% endblock %}
-  <button type="submit" id="id_submit" class="btn btn-primary">Submit</button>
-</form>
-
+{% if show_form %}
+  <form class="form" method="post">
+    {% csrf_token %}
+    {% block form %}
+      {{ form.media }}
+      {{ form|crispy }}
+    {% endblock %}
+    <button type="submit" id="id_submit" class="btn btn-primary">Submit</button>
+  </form>
+{% else %}
+  {% block hide_form_msg %}{% endblock %}
+{% endif %}
 
 {% endblock %}
