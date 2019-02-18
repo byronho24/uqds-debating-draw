@@ -26,7 +26,7 @@ def _assign_team_judging_score(attendance: Attendance):
 
     # Assign score
     score = never_judged *  WEIGHTS["never_judged"] + \
-            want_to_judge * WEIGHTS["want_to_judge"] + \
+            want_to_judge * WEIGHTS["want_to_judge"]
     if number_attending == 1:
         score += WEIGHTS["one_present"]
     elif number_attending == 2:
@@ -191,7 +191,7 @@ def _matchmake(match_day: MatchDay):
     attendances_competing = [item[2] for item in sorting_list]
 
     debates = []
-    number_of_debates = _number_of_debates(len(attendances_competing)
+    number_of_debates = _number_of_debates(len(attendances_competing))
     # Generate the debate objects
     for i in range(0, number_of_debates):
         attendance1 = attendances_competing[i*2]
