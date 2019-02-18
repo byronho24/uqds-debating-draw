@@ -33,7 +33,8 @@ class ScoreInstanceInlineForSpeaker(admin.TabularInline):
     fields = ("debate", "score")
 
     def get_min_num(self, request, obj=None, **kwargs):
-        return obj.score_set.count()
+        if obj:
+            return obj.score_set.count()
 
     def get_max_num(self, request, obj=None, **kwargs):
         return self.get_min_num(request, obj, **kwargs)
@@ -57,13 +58,13 @@ class DebateInstanceInline(admin.TabularInline):
     # })
 
     def get_max_num(self, request, obj=None, **kwargs):
-        if obj.date != timezone.localdate():
+        if obj and obj.date != timezone.localdate():
             return Debate.objects.filter(match_day=obj).count()
         else:
             return super().max_num
 
     def get_readonly_fields(self, request, obj):
-        if obj.date != timezone.localdate():
+        if obj and obj.date != timezone.localdate():
             return ("attendance1", "attendance2", 'judges')
         else:
             return tuple()
@@ -141,9 +142,10 @@ class MyDebateAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
         # Update team judged_before
-        for judge in obj.judges.all():
-            if not judge.team.judged_before:
-                Team.objects.filter(pk=judge.team.id).update(judged_before=True)
+        if obj:
+            for judge in obj.judges.all():
+                if not judge.team.judged_before:
+                    Team.objects.filter(pk=judge.team.id).update(judged_before=True)
 
     def save_formset(self, request, form, formset, change):
         # get all the objects in the formset
@@ -192,7 +194,7 @@ class MyMatchDayAdmin(admin.ModelAdmin):
     inlines = [DebateInstanceInline]
     fields = ('date', 'attendances_competing', 'attendances_judging')
     def get_readonly_fields(self, request, obj):
-        if obj.date != timezone.localdate():
+        if obj and obj.date != timezone.localdate():
             return ('date', 'attendances_judging', 'attendances_competing')
         else:
             return ('date',)

@@ -18,6 +18,7 @@ def count_qualified_judges(attendance: Attendance):
     sum(1 for speaker in attendance.speakers.all() if speaker.is_qualified_as_judge())
 
 # FIXME: algo would end up always having most qualified teams to judge?
+# FIXME: sometimes would end up that we have enough qualified judges but the team with the qualified judges aren't ranked top
 def _assign_team_judging_score(attendance: Attendance):
     # Get data from attendance
     number_attending = len(attendance.speakers.all())
@@ -34,6 +35,7 @@ def _assign_team_judging_score(attendance: Attendance):
     elif number_attending == 2:
         score += WEIGHTS["two_present"]
 
+    print(attendance.team.name, score)
     return score
 
 def _number_of_debates(attendances: List[Attendance]):
@@ -122,6 +124,7 @@ def _assign_competing_teams(attendances: List[Attendance]):
 
     # Sort teams based on judging score
     attendances = sorted(attendances, key=_assign_team_judging_score, reverse=True)
+    # print(attendances)
 
     # Pop until we have enough qualified judges or we have no teams left
     while (qualified_judges <  _number_of_debates(attendances) or len(attendances) % 2 != 0) and len(attendances) > 0:
