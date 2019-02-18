@@ -11,7 +11,6 @@ WEIGHTS = {
     'want_to_judge': 3,
     'two_present': 4,
     'one_present': 12,
-    'qualified_judge': 4
 }
 
 def count_qualified_judges(attendance: Attendance):
@@ -24,22 +23,19 @@ def _assign_team_judging_score(attendance: Attendance):
     number_attending = len(attendance.speakers.all())
     never_judged = not attendance.team.judged_before
     want_to_judge = attendance.want_to_judge
-    number_of_qualified_judges = attendance.count_qualified_judges()
 
     # Assign score
     score = never_judged *  WEIGHTS["never_judged"] + \
             want_to_judge * WEIGHTS["want_to_judge"] + \
-            number_of_qualified_judges * WEIGHTS["qualified_judge"]
     if number_attending == 1:
         score += WEIGHTS["one_present"]
     elif number_attending == 2:
         score += WEIGHTS["two_present"]
 
-    print(attendance.team.name, score)
     return score
 
-def _number_of_debates(attendances: List[Attendance]):
-    return math.floor(len(attendances) / 2)
+def _number_of_debates(attendances_count: int):
+    return math.floor(attendances_count / 2)
 
 def get_qualified_judges(attendances_judging):
     """
@@ -102,6 +98,11 @@ def find_attendance_to_swap(attendance_to_swap: Attendance, debate_choices: List
     # If function has not returned yet, then no attendance can be found to swap with 'attendance_to_swap'
     return None      
 
+def can_host_debates(attendances_competing, judges_count: int):
+    attendances_competing_count = len(attendances_competing)
+    return (qualified_judges >=  _number_of_debates(attendances_competing_count) \
+            or attendances_competing_count % 2 == 0)
+
 def _assign_competing_teams(attendances: List[Attendance]):
     """
     Determines which teams are competing and the speakers that will be judging on the day.
@@ -115,53 +116,51 @@ def _assign_competing_teams(attendances: List[Attendance]):
     if len(attendances) < 3:
         raise NotEnoughAttendancesException("Not enough attendances to generate at least one debate.")
 
-    # print("Want to judge")
-    # for attendance in Attendance.objects.filter(want_to_judge=True, date=datetime.today()).all():
-    #     for speaker in attendance.speakers.all():
-    #         print(speaker)
-    attendances_judging = []
-    qualified_judges = 0
+    # Only consider attendances with at least one qualified judge when assigning judges
+    qualified_attendances, unqualified_attendances = [], []
+    qualified_attendances.append(attendance) if get_qualified_judges(attendance) \
+        else unqualified_attendances.append(attendance)
+    # Sort qualified attendance based on judging score
+    qualified_attendances.sort(key=_assign_team_judging_score, reverse=True)
 
-    # Sort teams based on judging score
-    attendances = sorted(attendances, key=_assign_team_judging_score, reverse=True)
-    # print(attendances)
+    qualified_attenances_count = len(qualified_attendances)
+    attendances_competing = qualified_attendances + unqualified_attendances
+    attendances_judging = []
+    qualified_judges_count = 0
+
+    SEEK_FORWARD_LIMIT = 3
 
     # Pop until we have enough qualified judges or we have no teams left
-    while (qualified_judges <  _number_of_debates(attendances) or len(attendances) % 2 != 0) and len(attendances) > 0:
+    while (not can_host_debates(attendances_competing, qualified_judges_count)) \
+            and qualified_attenances_count > 0:
         indexToRemove = 0
-        delta = _number_of_debates(attendances) - qualified_judges
-        attendances_count = len(attendances)
-        if attendances_count % 2 != 0 and delta <= 3:
+        delta = _number_of_debates(len(attendances_competing)) - qualified_judges_count
+        if len(attendances_competing) % 2 != 0 and delta <= 3:
             # In this case we may be able to only pop one more team from PQ
             # Seek forward to see which team (if any) matches required number of qualified judges
-            SEEK_FORWARD = 2
-            for i in range(0, min(SEEK_FORWARD, attendances_count)):
-                attendance = attendances[i]
-                if count_qualified_judges(attendance) == delta:
+            for i in range(1, min(SEEK_FORWARD_LIMIT, qualified_attenances_count)):
+                potential_attendance = attendances_competing[i]
+                if count_qualified_judges(potetial_attendance) == delta:
                     indexToRemove = i
                     break
         # Remove item at indexToRemove from PQ (defaults to 0, but if seek forward finds a better match this would be non-zero)
-        judging_attendance = attendances.pop(indexToRemove)
+        judging_attendance = attendances_competing.pop(indexToRemove)
+        qualified_attenances_count -= 1
         attendances_judging.append(judging_attendance)
         for judge in judging_attendance.speakers.all():
             if judge.is_qualified_as_judge():
-                qualified_judges += 1
-
-    # print(f"Debates: { _number_of_debates(attendances)}")
-    # print(f"Judges: {judges}")
-    # print(f"Qualified judges: {len(qualified_judges)}")
+                qualified_judges_count += 1
 
     # Check if assigning process gave valid results
-    if not attendances:
-        raise NotEnoughJudgesException("Not enough qualified judges to host debates.")
+    # i.e. check if loop exited just because it has exhuasted all the qualified attendances available
+    if not can_host_debates(attendances_competing, qualified_judges_count):
+        return NotEnoughJudgesException("Not enough qualified judges to host debates.")
 
     # Assigning process gives valid result - now save to new MatchDay instance
     match_day = MatchDay()
     match_day.save()
-    for attendance in attendances:
-        match_day.attendances_competing.add(attendance)
-    for attendance_judging in attendances_judging:
-        match_day.attendances_judging.add(attendance_judging)
+    match_day.attendances_competing.set(attendances_competing)
+    match_day.attendances_judging.set(attendances_judging)
     match_day.save()
 
     return match_day
@@ -192,7 +191,7 @@ def _matchmake(match_day: MatchDay):
     attendances_competing = [item[2] for item in sorting_list]
 
     debates = []
-    number_of_debates = _number_of_debates(attendances_competing)
+    number_of_debates = _number_of_debates(len(attendances_competing)
     # Generate the debate objects
     for i in range(0, number_of_debates):
         attendance1 = attendances_competing[i*2]
