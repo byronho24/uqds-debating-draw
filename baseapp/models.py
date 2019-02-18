@@ -30,6 +30,17 @@ class Team(models.Model):
     def get_wins(self):
         return self.debates_won.count()
 
+    def compare_aff_neg(self):
+        """
+        Finds the number of times the teamhas been the affirmative/negative side
+        in the debates in the tournament.
+
+        Returns the affirmative count - negative count.
+        """
+        aff_count = self.debates_affirmative.count()
+        neg_count = self.debates_negative.count()
+        return aff_count - neg_count
+
     def __str__(self):
         return self.name
 

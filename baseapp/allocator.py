@@ -18,7 +18,7 @@ def count_qualified_judges(attendance: Attendance):
 
 # FIXME: algo would end up always having most qualified teams to judge?
 # --> Actually maybe not - since we take into account never_judged
-def _assign_team_judging_score(attendance: Attendance):
+def assign_judging_priority(attendance: Attendance):
     # Get data from attendance
     number_attending = len(attendance.speakers.all())
     never_judged = not attendance.team.judged_before
@@ -33,6 +33,23 @@ def _assign_team_judging_score(attendance: Attendance):
         score += WEIGHTS["two_present"]
 
     return score
+
+def rank_attendances(attendances_competing):
+    """ 
+    Returns a new list of attendances, where the attendances are ranked by
+    the attendance's team's number of wins in the tournament in descending order, 
+    then by the attendance's team's speakers' average score for the past debates 
+    in the tournament, in descending order.
+
+    Original list 'attendances_competing' is not affected.
+    """
+    sorting_list = []
+    for attendance in attendances_competing:
+        team = attendance.team
+        sorting_list.append((team.get_wins(), team.get_speakers_avg_score(), attendance))
+    # Sort teams by wins then by average speaker score
+    sorting_list.sort(key=itemgetter(0, 1), reverse=True)
+    return [item[2] for item in sorting_list]
 
 def _number_of_debates(attendances_count: int):
     return math.floor(attendances_count / 2)
@@ -65,13 +82,13 @@ def is_vetoed(initiator: Attendance, receiver: Attendance):
             return True
     return False
 
-def find_first_non_vetoed_attendance_in_debate(initiator: Attendance, debate: Debate):
+def find_highest_ranked_non_vetoed_attendance_in_debate(initiator: Attendance, debate: Debate):
     """
-    Finds the first attendance in 'debate' that 'initiator' has not vetoed, and returns it.
-    debate.affirmative comes first, compared to debate.negative.
+    Finds the highest ranked attendance in 'debate' that 'initiator' has not vetoed, and returns it.
     Returns None if no such attendance can be found in the 'debate' given.
     """
-    for attendance in [debate.affirmative, debate.negative]:
+    attendances = rank_attendances([debate.affirmative, debate.negative])
+    for attendance in attendances:
         if not is_vetoed(initiator, attendance):
             return attendance
     return None
@@ -80,17 +97,16 @@ def find_first_non_vetoed_attendance_in_debate(initiator: Attendance, debate: De
 def find_attendance_to_swap(attendance_to_swap: Attendance, debate_choices: List[Debate]):
     """
     This function is for veto purposes.
-    Finds the earliest attendance in the debates in 'debate_choices' that 'attendance_to_swap' has not vetoed.
+    Finds the highest ranked attendance in the debates in 'debate_choices' that 'attendance_to_swap' has not vetoed.
     Returns a tuple that contains (in this order): 
         - the debate that the found attendance is in
         - a string, either 'affirmative' or 'negative', that signifies which of the attendances in the debate
           is the found attendance
 
-    debate.affirmative comes before debate.negative.
     If no such attendance can be found, returns None.
     """
     for debate in debate_choices:
-        attendance_available = find_first_non_vetoed_attendance_in_debate(attendance_to_swap, debate)
+        attendance_available = find_highest_ranked_non_vetoed_attendance_in_debate(attendance_to_swap, debate)
         if attendance_available is not None:
             return (debate, attendance_available)
 
@@ -128,7 +144,7 @@ def _assign_competing_teams(attendances: List[Attendance]):
         qualified_attendances.append(attendance) if get_qualified_judges(attendance) \
             else unqualified_attendances.append(attendance)
     # Sort qualified attendance based on judging score
-    qualified_attendances.sort(key=_assign_team_judging_score, reverse=True)
+    qualified_attendances.sort(key=assign_judging_priority, reverse=True)
 
     qualified_attenances_count = len(qualified_attendances)
     attendances_competing = qualified_attendances + unqualified_attendances
@@ -173,6 +189,27 @@ def _assign_competing_teams(attendances: List[Attendance]):
     return match_day
     
 
+def get_attendance_higher_aff_neg_diff(attendance1: Attendance, attendance2: Attendance):
+    """
+    Returns the attendance out of 'attendance1' and 'attendance2' whose team has the 
+    higher affirmative_count - negative_count difference.
+
+    If both teams have the same aff_neg difference, then returns one of the two at random.
+
+    For the definition of the aforementioned difference, consult documentation for 
+    Team.compare_aff_neg.
+
+    :ensures: returned value is either 'attendance1' or 'attendance2'
+    """
+    if attendance1.team.compare_aff_neg() > attendance2.team.compare_aff_neg():
+        return attendance1
+    elif attendance1.team.compare_aff_neg() < attendance2.team.compare_aff_neg():
+        return attendance2
+    else:
+        from random import randint
+        return [attendance1, attendance2][randint(0,1)]
+
+
 def _matchmake(match_day: MatchDay):
     """
     Assigns the debates for the day.
@@ -193,26 +230,30 @@ def _matchmake(match_day: MatchDay):
         for judge in get_qualified_judges(attendance):
             judges.append(judge)
 
-    sorting_list = []
-    for attendance in attendances_competing:
-        team = attendance.team
-        sorting_list.append((team.get_wins(), team.get_speakers_avg_score(), attendance))
-    # Sort teams by wins then by average speaker score
-    sorting_list.sort(key=itemgetter(0, 1), reverse=True)
-    attendances_competing = [item[2] for item in sorting_list]
+    # Rank teams
+    attendances_competing = rank_attendances(attendances_competing)
 
     debates = []
     number_of_debates = _number_of_debates(len(attendances_competing))
     # Generate the debate objects
     for i in range(0, number_of_debates):
-        affirmative = attendances_competing[i*2]
-        negative = attendances_competing[i*2 + 1]
+        attendance1 = attendances_competing[i*2]
+        attendance2 = attendances_competing[i*2 + 1]
 
+        
+        
         debate = Debate()
         debate.match_day = match_day
-        debate.affirmative = affirmative
-        debate.negative = negative
-        debate.save() # For ManyToManyRelation
+        # Check each team's affirmative/negative ratio in past debates
+        # Try to make it so that each team has roughly an equal share of
+        # being affirmative or negative in the tournament's debates
+        if get_attendance_higher_aff_neg_diff(attendance1, attendance2) == attendance1:
+            debate.negative = attendance1
+            debate.affirmative = attendance2
+        else:
+            debate.negative = attendance2
+            debate.affirmative = attendance1
+        debate.save() # For ManyToManyRelation for judges
 
         # Assign judges - do this circularly (i.e. if there are excess judges
         # assign to higher ranked debates in order)
