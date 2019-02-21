@@ -11,7 +11,7 @@ class Team(models.Model):
 
     MAX_SPEAKERS = 5
 
-    name = models.CharField(max_length=200, unique=True, verbose_name="team name")
+    name = models.CharField(max_length=200, unique=True, verbose_name="Team Name")
     judged_before = models.BooleanField(default=False)
 
     def get_speakers_avg_score(self):

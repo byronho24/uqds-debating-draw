@@ -82,13 +82,17 @@ class DebateInstanceInline(admin.TabularInline):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
-        # if db_field.name == "judges":
-        #     try:
-        #         match_day = MatchDay.objects.get(date=timezone.localdate())
-        #         kwargs["queryset"] = get_qualified_judges(match_day.attendances_judging.all())
-        #     except MatchDay.DoesNotExist:
-        #         # Then no need to change queryset
-        #         pass
+        if db_field.name == "judges":
+            try:
+                match_day = MatchDay.objects.get(date=timezone.localdate())
+                # Empty Speaker queryset
+                # FIXME: this looks like a hack more than anything hahaha.
+                qs = Speaker.objects.filter(id=0).all()
+                for attendance_judging in match_day.attendances_judging.all():
+                    qs |= attendance_judging.speakers.all()
+                kwargs["queryset"] = qs
+            except MatchDay.DoesNotExist:
+                pass
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
     def save_formset(self, request, form, formset, change):
@@ -208,11 +212,31 @@ class MyAdminSite(admin.AdminSite):
     site_header = "UQ Debating Society Internals Administration"
     site_title = "UQDS Admin"
 
+    def get_app_list(self, request):
+        ordering = {
+            'Teams': 1,
+            'Speakers': 2,
+            'Attendances': 3,
+            'Draws': 4,
+            'Debates': 5
+        }
+        app_dict = self._build_app_dict(request)
+        # Sort apps alphabetically
+        app_list = sorted(app_dict.values(), key=lambda x: x['name'].lower())
+
+        # Sort models within baseapp using custom ordering
+        for app in app_list:
+            if app['name'] == 'baseapp':
+                app['models'].sort(key=lambda x: ordering[x['name']])
+                break
+        
+        return app_list
+
 
 admin_site = MyAdminSite(name="myadmin")
 admin_site.register(Team, MyTeamAdmin)
 admin_site.register(Speaker, MySpeakerAdmin)
 admin_site.register(Attendance, MyAttendanceAdmin)
-admin_site.register(Score, MyScoreAdmin)
-admin_site.register(Debate, MyDebateAdmin)
+# admin_site.register(Score, MyScoreAdmin)
 admin_site.register(MatchDay, MyMatchDayAdmin)
+admin_site.register(Debate, MyDebateAdmin)

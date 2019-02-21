@@ -241,6 +241,22 @@ def get_attendance_higher_aff_neg_diff(attendance1: Attendance, attendance2: Att
         from random import randint
         return [attendance1, attendance2][randint(0,1)]
 
+def assign_aff_neg(debate: Debate, attendance1: Attendance, attendance2: Attendance):
+    """
+    Assigns which of attendance1 or attendance2 would be affirmative or negative in the debate.
+    """
+    # Check each team's affirmative/negative diff in past debates
+    # Try to make it so that each team has roughly an equal share of
+    # being affirmative or negative in the tournament's debates
+    if get_attendance_higher_aff_neg_diff(attendance1, attendance2) == attendance1:
+        debate.negative = attendance1
+        debate.affirmative = attendance2
+    else:
+        debate.negative = attendance2
+        debate.affirmative = attendance1
+    
+    return debate
+
 
 def _matchmake(match_day: MatchDay):
     """
@@ -274,15 +290,8 @@ def _matchmake(match_day: MatchDay):
 
         debate = Debate()
         debate.match_day = match_day
-        # Check each team's affirmative/negative diff in past debates
-        # Try to make it so that each team has roughly an equal share of
-        # being affirmative or negative in the tournament's debates
-        if get_attendance_higher_aff_neg_diff(attendance1, attendance2) == attendance1:
-            debate.negative = attendance1
-            debate.affirmative = attendance2
-        else:
-            debate.negative = attendance2
-            debate.affirmative = attendance1
+
+        assign_aff_neg(debate, attendance1, attendance2)
         debate.save() # For ManyToManyRelation for judges
 
         # Assign judges - do this circularly (i.e. if there are excess judges
@@ -302,6 +311,7 @@ def _matchmake(match_day: MatchDay):
         negative = debate.negative
 
         if is_vetoed(affirmative, negative) or is_vetoed(negative, affirmative):
+            print("veto: ", affirmative.team.name, negative.team.name)
             # Swap lower ranked team in debate with the highest ranked non-vetoed
             # attendance ranked below
             debates_below = [debates[j] for j in range(i+1, len(debates))]
@@ -311,6 +321,7 @@ def _matchmake(match_day: MatchDay):
             if swap_details is not None:
                 debate_to_swap, attendance_attr = swap_details
                 attendance_to_swap = getattr(debate_to_swap, attendance_attr)
+                print("swap: ", lower_ranked_team.team.name, attendance_to_swap.team.name)
                 # Swap lower_ranked_team with attendace_to_swap
                 if lower_ranked_team_attr == "affirmative":
                     debate.affirmative = attendance_to_swap
@@ -320,8 +331,10 @@ def _matchmake(match_day: MatchDay):
                     debate_to_swap.affirmative = lower_ranked_team
                 elif attendance_attr == "negative":
                     debate_to_swap.negative = lower_ranked_team
-                debate.save()
-                debate_to_swap.save()
+                
+                # Now reassign aff and neg sides for the affected debates
+                assign_aff_neg(debate, debate.affirmative, debate.negative).save()
+                assign_aff_neg(debate_to_swap, debate_to_swap.affirmative, debate_to_swap.negative).save()
             else:
                 # No available attendance to swap with - raise exception for now
                 raise CannotFindWorkingConfigurationException(

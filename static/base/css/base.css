@@ -1,11 +1,12 @@
 body {
-  background-color: #f2e6fd;
+  background-color: #ffffff;
   margin: 0;
   padding: 0;
   font-family: 'Poppins', 'sans-serif';
 }
 
 .container {
+  background-color: aliceblue;
   display: block;
   overflow: auto;
   border-radius: 2vw 2vw 2vw 2vw;
