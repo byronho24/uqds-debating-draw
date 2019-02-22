@@ -258,6 +258,11 @@ def assign_aff_neg(debate: Debate, attendance1: Attendance, attendance2: Attenda
     return debate
 
 
+def is_debated_before(team1: Team, team2: Team):
+    qs = Debate.objects.filter(affirmative__team=team1, negative__team=team2) |\
+            Debate.objects.filter(affirmative__team=team2, negative__team=team1)
+    return qs.exists()
+
 def _matchmake(match_day: MatchDay):
     """
     Assigns the debates for the day.
@@ -279,14 +284,26 @@ def _matchmake(match_day: MatchDay):
             judges.append(judge)
 
     # Rank teams
+    from collections import deque
     attendances_competing = rank_attendances(attendances_competing)
 
     debates = []
-    number_of_debates = _number_of_debates(len(attendances_competing))
     # Generate the debate objects
-    for i in range(0, number_of_debates):
-        attendance1 = attendances_competing[i*2]
-        attendance2 = attendances_competing[i*2 + 1]
+    while attendances_competing > 0:
+        attendance1 = attendances_competing.pop(0)
+        # Find opponent
+        TEAM_WINS_DELTA_LIMIT = 1
+        for i, attendance in enumerate(attendances_competing):
+            if not is_debated_before(attendance1.team, attendance.team) and \
+                    abs(attendance1.team.get_wins() - attendance.team.get_wins()) <= \
+                        TEAM_WINS_DELTA_LIMIT:
+                attendance2 = attendances_competing.pop(i)
+                break
+        else:
+            # No opponent found that attendance1's team has not VS'ed before
+            # In this case just debate with the highest ranked team
+            attendance2 = attendances_competing.pop(0)
+
 
         debate = Debate()
         debate.match_day = match_day
