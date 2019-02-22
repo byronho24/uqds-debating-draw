@@ -134,6 +134,11 @@ class Debate(models.Model):
 
 class MatchDay(models.Model):
     """ Saves the debates for a specific match day."""
+
+    class Meta:
+        verbose_name = "Draw"
+        verbose_name_plural = "Draws"
+
     date = models.DateField(default=timezone.localdate, unique=True)
     attendances_competing = models.ManyToManyField(Attendance, related_name="competing_matchdays")
     attendances_judging = models.ManyToManyField(Attendance, related_name="judging_matchdays")
