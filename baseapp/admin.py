@@ -6,8 +6,6 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
 from django.contrib import messages
 from ajax_select import make_ajax_form
-from .allocator import get_qualified_judges
-
 
 class ScoreInstanceInlineForDebate(admin.TabularInline):
     model = Score

@@ -386,6 +386,7 @@ def generate_attendance(date, team):
     pass
 
 def generate_attendances(date):
-    teams_attending = random.sample(Team.objects.all(), ATTENDACES_PER_MATCHDAY)
-    for team in teams_attending:
-        # Generate attendance
+    # teams_attending = random.sample(Team.objects.all(), ATTENDACES_PER_MATCHDAY)
+    # for team in teams_attending:
+    #     # Generate attendance
+    pass  
