@@ -373,3 +373,19 @@ def generate_debates(attendances: List[Attendance]):
         return []   # No attendances
     match_day = _matchmake(_assign_competing_teams(attendances))
     return match_day
+
+
+
+### Testing code ###
+
+ATTENDACES_PER_MATCHDAY = 20
+PROB_PREFER_TO_JUDGE = 0.5
+
+import random 
+def generate_attendance(date, team):
+    pass
+
+def generate_attendances(date):
+    teams_attending = random.sample(Team.objects.all(), ATTENDACES_PER_MATCHDAY)
+    for team in teams_attending:
+        # Generate attendance

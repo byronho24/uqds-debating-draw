@@ -8,43 +8,10 @@
 {% block before_list %}
 <div class="row my-2">
   <div class="col-12 text-center">
-    <h4 style="display: inline-block;">Today's Debates</h4>
+    <h4 style="display: inline-block;">Draw</h4>
   </div>
 </div>
-
-<!--
-  success/ failure message goes here
-!-->
-{% if messages %}
-  {% for message in messages %}
-    {% if message.tags == 'error' %}
-      <div class="alert alert-danger alert-dismissable fade show" role="alert">
-    {% else %}
-      <div class="alert alert-{{message.tags}} alert-dismissable fade show" role="alert">
-    {% endif %}
-        {{ message|safe }}
-        <button type="button" class="close" data-dismiss="alert" arai-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-  {% endfor %}
-</ul>
-{% endif %}
-
-{% endblock %}
 
 {% block detail_link %}{% url 'baseapp:debate_detail' debate.debate_id %}{% endblock %}
 
 {% block nav-item %}debates{% endblock %}
-
-{% block body_js %}
-<script>
-  $("#id_generate_debates").click(function() {
-    $.get("{% url 'baseapp:debates' %}", {generate_debates: true, })
-      .done(function() {
-        location.reload();
-      });
-  });
-</script>
-{{ block.super }}
-{% endblock %}
