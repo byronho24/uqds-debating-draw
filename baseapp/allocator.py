@@ -349,7 +349,7 @@ def _matchmake(match_day: MatchDay):
                     debate_to_swap.affirmative = lower_ranked_team
                 elif attendance_attr == "negative":
                     debate_to_swap.negative = lower_ranked_team
-                
+                # TODO: Add to debates_affected counter for Veto
                 # Now reassign aff and neg sides for the affected debates
                 assign_aff_neg(debate, debate.affirmative, debate.negative).save()
                 assign_aff_neg(debate_to_swap, debate_to_swap.affirmative, debate_to_swap.negative).save()

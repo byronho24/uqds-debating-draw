@@ -34,6 +34,11 @@ class Team(models.Model):
         return self.name
 
 
+class SpeakerManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().annotate(models.Avg('score'))
+
+
 class Speaker(models.Model):
 
     JUDGE_THRESHOLD = 10
@@ -50,6 +55,7 @@ class Speaker(models.Model):
         'HighQualified': 20,
         'JudgeBreak': 30
     }
+    objects = SpeakerManager()
 
     name = models.CharField(max_length=50)
     team = models.ForeignKey(Team, blank=True, null=True,
@@ -70,14 +76,11 @@ class Speaker(models.Model):
         return self.name
 
     def get_avg_score(self):
-        avg = 0
-        scores = self.score_set.all()
-        if not scores:
-            return avg  # No scores yet
-        for score in scores:
-            avg += score.score
-        avg /= len(scores)
-        return avg
+        avg = Score.objects.filter(speaker=self)\
+                .aggregate(models.Avg('score'))['score__avg']
+        return avg if avg else 0
+    get_avg_score.admin_order_field = 'score__avg'
+    get_avg_score.short_description = 'Average Score'
 
     def _get_qualification_score(self) -> int:
         score = 0

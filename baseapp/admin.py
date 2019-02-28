@@ -114,7 +114,7 @@ class MyTeamAdmin(admin.ModelAdmin):
 
     def wins(self, obj):
         return obj.get_wins()
-    wins.admin_order_field = 'debates_won'
+    wins.admin_order_field = '-debates_won'
 
 
     def has_add_permission(self, request, obj=None):
