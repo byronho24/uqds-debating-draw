@@ -254,3 +254,8 @@ admin_site.register(Attendance, MyAttendanceAdmin)
 admin_site.register(MatchDay, MyMatchDayAdmin)
 admin_site.register(Debate, MyDebateAdmin)
 admin_site.register(Veto, MyVetoAdmin)
+
+from django.contrib.auth.models import User, Group
+from django.contrib.auth.admin import UserAdmin, GroupAdmin
+admin_site.register(Group, GroupAdmin)
+admin_site.register(User, UserAdmin)
