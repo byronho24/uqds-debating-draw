@@ -1,4 +1,4 @@
-from .models import Attendance, Speaker, Team, Debate, MatchDay
+from .models import Attendance, Speaker, Team, Debate, MatchDay, Veto
 from django.utils import timezone
 from typing import List
 import math
@@ -84,13 +84,14 @@ def get_attr_for_attendance(debate: Debate, attendance: Attendance):
 def get_vetoed_speakers_for_attendance(attendance: Attendance):
     vetoed_speakers = []
     for speaker in attendance.speakers.all():
-        for vetoed_speaker in speaker.vetoes.all():
-            vetoed_speakers.append(vetoed_speaker)
+        initiated_vetoes = Veto.objects.filter(initiator=speaker).all()
+        for veto in initiated_vetoes:
+            vetoed_speakers.append(veto.receiver)
     return vetoed_speakers
 
 def is_vetoed(initiator: Attendance, receiver: Attendance):
     """
-        Returns True if any speaker in 'initiator' has vetoed any speaker in 'receiver'.
+        Returns True if any speaker in 'initiator' has initiated a veto against any speaker in 'receiver'.
         Return False otherwise.
     """
     initiator_vetoed_speakers = get_vetoed_speakers_for_attendance(initiator)
@@ -378,15 +379,14 @@ def generate_debates(attendances: List[Attendance]):
 
 ### Testing code ###
 
-ATTENDACES_PER_MATCHDAY = 20
-PROB_PREFER_TO_JUDGE = 0.5
+# ATTENDACES_PER_MATCHDAY = 20
+# PROB_PREFER_TO_JUDGE = 0.5
 
-import random 
-def generate_attendance(date, team):
-    pass
+# import random 
+# def generate_attendance(date, team):
+#     pass
 
-def generate_attendances(date):
-    # teams_attending = random.sample(Team.objects.all(), ATTENDACES_PER_MATCHDAY)
-    # for team in teams_attending:
-    #     # Generate attendance
-    pass  
+# def generate_attendances(date):
+#     teams_attending = random.sample(Team.objects.all(), ATTENDACES_PER_MATCHDAY)
+#     for team in teams_attending:
+#         # Generate attendance  

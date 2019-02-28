@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Team, Speaker, Attendance, Debate, Score, MatchDay
+from .models import Team, Speaker, Attendance, Debate, Score, MatchDay, Veto
 from django.urls import path, include
 from django.utils import timezone
 from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
@@ -108,11 +108,14 @@ class DebateInstanceInline(admin.TabularInline):
                 instance.save()
 
 class MyTeamAdmin(admin.ModelAdmin):
-    list_display = ("name", "wins", "count_qualified_judges")
+    list_display = ("name", "wins")
+    # list_filter = ("wins",)
     inlines = [SpeakerInstanceInline]
 
     def wins(self, obj):
         return obj.get_wins()
+    wins.admin_order_field = 'debates_won'
+
 
     def has_add_permission(self, request, obj=None):
         return False
@@ -165,8 +168,17 @@ class MyDebateAdmin(admin.ModelAdmin):
 
 class MySpeakerAdmin(admin.ModelAdmin):
     # inlines = [ScoreInstanceInlineForSpeaker]
-    list_display = ("name", "team", "qualification_score")
+    list_display = ("name", "team", "qualification_score", "get_avg_score")
     list_filter = ("team",)
+
+    # Allow search for speakers by name
+    search_fields = ('name',)
+    ordering = ('name',)
+
+    def get_search_results(self, request, queryset, search_term):
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        return queryset, use_distinct
+
 
 class MyScoreAdmin(admin.ModelAdmin):
     list_display = ('speaker', 'debate')
@@ -206,6 +218,10 @@ class MyMatchDayAdmin(admin.ModelAdmin):
             kwargs["queryset"] = Attendance.objects.filter(date=timezone.localdate())
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
+
+class MyVetoAdmin(admin.ModelAdmin):
+    autocomplete_fields = ('initiator', 'receiver')
+
 class MyAdminSite(admin.AdminSite):
     site_header = "UQ Debating Society Internals Administration"
     site_title = "UQDS Admin"
@@ -216,7 +232,8 @@ class MyAdminSite(admin.AdminSite):
             'Speakers': 2,
             'Attendances': 3,
             'Draws': 4,
-            'Debates': 5
+            'Debates': 5,
+            'Vetos': 6
         }
         app_dict = self._build_app_dict(request)
         # Sort apps alphabetically
@@ -230,11 +247,10 @@ class MyAdminSite(admin.AdminSite):
         
         return app_list
 
-
 admin_site = MyAdminSite(name="myadmin")
 admin_site.register(Team, MyTeamAdmin)
 admin_site.register(Speaker, MySpeakerAdmin)
 admin_site.register(Attendance, MyAttendanceAdmin)
-# admin_site.register(Score, MyScoreAdmin)
 admin_site.register(MatchDay, MyMatchDayAdmin)
 admin_site.register(Debate, MyDebateAdmin)
+admin_site.register(Veto, MyVetoAdmin)

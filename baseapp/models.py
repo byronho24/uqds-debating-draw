@@ -45,7 +45,10 @@ class Speaker(models.Model):
         'EastersBreak': 10,
         'AustralsBreak': 20,
         'AWDCBreak': 10,
-        'WUDCBreak': 100
+        'WUDCBreak': 100,
+        'LowQualified': 1,
+        'HighQualified': 20,
+        'JudgeBreak': 30
     }
 
     name = models.CharField(max_length=50)
@@ -58,8 +61,10 @@ class Speaker(models.Model):
     australs_break = models.BooleanField(default=False)
     awdc_break = models.BooleanField(default=False)
     wudc_break = models.BooleanField(default=False)
+    low_qualified = models.BooleanField(default=False)
+    high_qualified = models.BooleanField(default=False)
+    judge_break = models.BooleanField(default=False)
     qualification_score = models.IntegerField(editable=False, default=0)
-    vetoes = models.ManyToManyField('self', symmetrical=False)
 
     def __str__(self):
         return self.name
@@ -82,7 +87,10 @@ class Speaker(models.Model):
                  self.easters_break * self.WEIGHTS['EastersBreak'] + \
                  self.australs_break * self.WEIGHTS['AustralsBreak'] + \
                  self.awdc_break * self.WEIGHTS['AWDCBreak'] + \
-                 self.wudc_break * self.WEIGHTS['WUDCBreak']
+                 self.wudc_break * self.WEIGHTS['WUDCBreak'] + \
+                 self.low_qualified * self.WEIGHTS['LowQualified'] + \
+                 self.high_qualified * self.WEIGHTS['HighQualified'] + \
+                 self.judge_break * self.WEIGHTS['JudgeBreak']
         return score
 
     def save(self, *args, **kwargs):
@@ -155,3 +163,10 @@ class Score(models.Model):
                                         MinValueValidator(1)
                                     ])
     debate = models.ForeignKey(Debate, on_delete=models.CASCADE)
+
+
+class Veto(models.Model):
+
+    initiator = models.ForeignKey(Speaker, related_name="vetoes_initiated", on_delete=models.CASCADE)
+    receiver = models.ForeignKey(Speaker, related_name="vetoes_received", on_delete=models.CASCADE)
+    affected_debates = models.IntegerField(default=0, editable=False)
