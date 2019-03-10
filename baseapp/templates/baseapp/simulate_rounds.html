@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Simulate Rounds</title>
+    <style>
+    table {
+        border-collapse: collapse;
+        width: 90%;
+    }
+
+    table, th, td {
+        border: 1px solid black;
+        padding: 10px;
+    }
+    </style>
+</head>
+<body>
+    <form action="/simulate-rounds/" method="post">
+        {% csrf_token %}
+        <label for="form_input_rounds">Rounds to simulate:</label>
+        <input type="number" name="rounds" id="form_input_rounds">
+        <button type="submit">Submit</button>
+    </form>
+    {% for match_day in match_days %}
+    <h4>Match day: {{ match_day.date }}</h4>
+    <div>
+        <table>
+            <tr>
+                <td>
+                    Teams competing: <br>
+                    <ul>
+                        {% for attendance in match_day.attendances_competing.all %}
+                        <li>{{ attendance.team.name }}</li>
+                        {% endfor %}
+                    </ul>
+                </td>
+                <td>
+                    Teams judging: <br>
+                    <ul>
+                        {% for attendance in match_day.attendances_judging.all %}
+                        <li>{{ attendance.team.name }}</li>
+                        {% endfor %}
+                    </ul>
+                </td>
+            </tr>
+        </table>
+        Debates: <br>
+        <table>
+            <tr>
+                <th>Affirmative</th>
+                <th>Negative</th>
+                <th>Judge(s)</th>
+            </tr>
+
+            {% for debate in match_day.debate_set.all %}
+                <tr>
+                    <td>{{ debate.affirmative.team.name }}</td>
+                    <td>{{ debate.negative.team.name }}</td>
+                    <td>
+                        {% for judge in debate.judges.all %}
+                            {{ judge.name }}, 
+                        {% endfor %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+    {% endfor %}
+</body>
+</html>

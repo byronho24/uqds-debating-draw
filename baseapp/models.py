@@ -160,7 +160,7 @@ class MatchDay(models.Model):
 class Score(models.Model):
 
     speaker = models.ForeignKey(Speaker, on_delete=models.CASCADE)
-    score = models.DecimalField(max_digits=2, decimal_places=1, blank=False,
+    score = models.DecimalField(max_digits=3, decimal_places=1, blank=False,
                                     validators=[
                                         MaxValueValidator(10),
                                         MinValueValidator(1)
@@ -172,4 +172,7 @@ class Veto(models.Model):
 
     initiator = models.ForeignKey(Speaker, related_name="vetoes_initiated", on_delete=models.CASCADE)
     receiver = models.ForeignKey(Speaker, related_name="vetoes_received", on_delete=models.CASCADE)
-    affected_debates = models.IntegerField(default=0, editable=False)
+    affected_debates = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.initiator.name} against {self.receiver.name}"

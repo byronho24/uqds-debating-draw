@@ -100,6 +100,31 @@ def is_vetoed(initiator: Attendance, receiver: Attendance):
             return True
     return False
 
+def is_speaker_in_attendance(speaker: Speaker, attendance: Attendance):
+    """ 
+    Returns True if given speaker is in the given attendancee, False otherwise.
+    """
+    return attendance.speakers.filter(pk=speaker.pk).exists()
+
+def get_vetoes(init_attendance: Attendance, rec_attendance: Attendance):
+    """
+    Finds all of the Veto instances where the initiator is a speaker in init_attendance
+    and the receiver is a speaker in rec_attendance.
+    Returns a list of all such Veto instances.
+    Returns an empty list if no speaker in init_attendance has initiated a veto
+    against any speaker in rec_attendance.
+    """
+    vetoes = []
+    for speaker in init_attendance.speakers.all():
+        vetoes_initiated = Veto.objects.filter(initiator=speaker).all()
+        if vetoes_initiated:
+            for veto in vetoes_initiated:
+                if is_speaker_in_attendance(veto.receiver, rec_attendance):
+                    vetoes.append(veto)
+    return vetoes
+
+
+
 def find_highest_ranked_non_vetoed_attendance_in_debate(initiator: Attendance, debate: Debate):
     """
     Finds the highest ranked attendance in 'debate' that 'initiator' has not vetoed.
@@ -202,7 +227,8 @@ def _assign_competing_teams(attendances: List[Attendance]):
         return NotEnoughJudgesException("Not enough qualified judges to host debates.")
 
     # Assigning process gives valid result - now save to new MatchDay instance
-    match_day = MatchDay()
+    date = attendances[0].date
+    match_day = MatchDay(date=date)
     match_day.save()
     match_day.attendances_competing.set(attendances_competing)
     match_day.attendances_judging.set(attendances_judging)
@@ -285,20 +311,21 @@ def _matchmake(match_day: MatchDay):
             judges.append(judge)
 
     # Rank teams
-    from collections import deque
     attendances_competing = rank_attendances(attendances_competing)
+    number_of_debates = _number_of_debates(len(attendances_competing))
 
     debates = []
     # Generate the debate objects
-    while attendances_competing > 0:
+    for i in range(0, number_of_debates):
         attendance1 = attendances_competing.pop(0)
         # Find opponent
         TEAM_WINS_DELTA_LIMIT = 1
-        for i, attendance in enumerate(attendances_competing):
+        for j, attendance in enumerate(attendances_competing):
+            # TODO: can optimise so that we don't go through entire list
             if not is_debated_before(attendance1.team, attendance.team) and \
                     abs(attendance1.team.get_wins() - attendance.team.get_wins()) <= \
                         TEAM_WINS_DELTA_LIMIT:
-                attendance2 = attendances_competing.pop(i)
+                attendance2 = attendances_competing.pop(j)
                 break
         else:
             # No opponent found that attendance1's team has not VS'ed before
@@ -328,7 +355,9 @@ def _matchmake(match_day: MatchDay):
         affirmative = debate.affirmative
         negative = debate.negative
 
-        if is_vetoed(affirmative, negative) or is_vetoed(negative, affirmative):
+        vetoes_for_debate = get_vetoes(affirmative, negative) + get_vetoes(negative, affirmative)
+
+        if vetoes_for_debate:
             print("veto: ", affirmative.team.name, negative.team.name)
             # Swap lower ranked team in debate with the highest ranked non-vetoed
             # attendance ranked below
@@ -350,6 +379,9 @@ def _matchmake(match_day: MatchDay):
                 elif attendance_attr == "negative":
                     debate_to_swap.negative = lower_ranked_team
                 # TODO: Add to debates_affected counter for Veto
+                for veto in vetoes_for_debate:
+                    veto.affected_debates += 1
+                    veto.save()
                 # Now reassign aff and neg sides for the affected debates
                 assign_aff_neg(debate, debate.affirmative, debate.negative).save()
                 assign_aff_neg(debate_to_swap, debate_to_swap.affirmative, debate_to_swap.negative).save()
@@ -362,31 +394,16 @@ def _matchmake(match_day: MatchDay):
 
     return match_day
 
-def generate_debates(attendances: List[Attendance]):
+def generate_debates(date):
     """
-    Generates debates given the list of attendances for the day.
+    Generates debates given the date.
     Instantiates Debate objects and saves them to the database.
 
     :param attendances: Attendances to generate debates for
     :return: the generated MatchDay
     """
-    if not attendances:
-        return []   # No attendances
+    # Get attendances
+    attendances = list(Attendance.objects.filter(date=date))
     match_day = _matchmake(_assign_competing_teams(attendances))
+    match_day.save()
     return match_day
-
-
-
-### Testing code ###
-
-# ATTENDACES_PER_MATCHDAY = 20
-# PROB_PREFER_TO_JUDGE = 0.5
-
-# import random 
-# def generate_attendance(date, team):
-#     pass
-
-# def generate_attendances(date):
-#     teams_attending = random.sample(Team.objects.all(), ATTENDACES_PER_MATCHDAY)
-#     for team in teams_attending:
-#         # Generate attendance  

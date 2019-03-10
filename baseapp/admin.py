@@ -221,6 +221,8 @@ class MyMatchDayAdmin(admin.ModelAdmin):
 
 class MyVetoAdmin(admin.ModelAdmin):
     autocomplete_fields = ('initiator', 'receiver')
+    list_display = ('initiator', 'receiver', 'affected_debates')
+    list_display_links = ('initiator', 'receiver')
 
 class MyAdminSite(admin.AdminSite):
     site_header = "UQ Debating Society Internals Administration"

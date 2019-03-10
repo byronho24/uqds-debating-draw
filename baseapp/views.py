@@ -167,6 +167,15 @@ def table(request):
     }
     return render(request, 'baseapp/table.html', context)
 
+def simulate_rounds(request):
+    from .test_allocator import simulate_rounds
+    match_days = []
+    if request.method == 'POST':
+        rounds = int(request.POST['rounds'])
+        match_days = simulate_rounds(rounds)
+    # match_days = simulate_rounds(1)
+    return render(request, 'baseapp/simulate_rounds.html', {'match_days': match_days})
+
 # def record_results(request):
 #     # Get all the debates for that week
 #     today = timezone.localdate()
@@ -286,21 +295,17 @@ def generate_debates(request):
             "Debates already generated. Please select the matchday for today below to edit the debates."
         )
     else:
-        attendances = list(Attendance.objects.filter(date=datetime.today()))
-        if not attendances:
-            messages.warning(request, "There are no attendances yet for today.")
+        try:
+            match_day = allocator.generate_debates(date=timezone.localdate())
+        except NotEnoughAttendancesException as nea:
+            messages.error(request, str(nea))
+        except NotEnoughJudgesException as nej:
+            messages.error(request, str(nej))
+        except CannotFindWorkingConfigurationException as e:
+            messages.error(request, str(e))
         else:
-            try:
-                match_day = allocator.generate_debates(attendances)
-            except NotEnoughAttendancesException as nea:
-                messages.error(request, str(nea))
-            except NotEnoughJudgesException as nej:
-                messages.error(request, str(nej))
-            except CannotFindWorkingConfigurationException as e:
-                messages.error(request, str(e))
-            else:
-                messages.success(request, "Please review the debates generated, and click 'Save' once you are happy with the allocated debates.")
-                return HttpResponseRedirect(f"/admin/baseapp/matchday/{match_day.id}/change/")
+            messages.success(request, "Please review the debates generated, and click 'Save' once you are happy with the allocated debates.")
+            return HttpResponseRedirect(f"/admin/baseapp/matchday/{match_day.id}/change/")
 
     # TODO: fix hard-coded url
     return HttpResponseRedirect("/admin/baseapp/matchday/")
