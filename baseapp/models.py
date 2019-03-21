@@ -176,3 +176,10 @@ class Veto(models.Model):
 
     def __str__(self):
         return f"{self.initiator.name} against {self.receiver.name}"
+
+
+class Room(models.Model):
+
+    date = models.DateField(default=timezone.localdate)
+    match_day = models.ForeignKey(MatchDay, blank=True, null=True, on_delete=models.SET_NULL)
+    name = models.CharField(max_length=100)
