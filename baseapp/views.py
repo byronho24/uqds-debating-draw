@@ -5,7 +5,7 @@ from django.utils import timezone
 from . import allocator
 from .forms import TeamAttendanceForm, TeamSignupForm, DebateResultsForm, ScoreForm
 from .models import Attendance, Speaker, Team, Score, Debate, MatchDay
-from .exceptions import NotEnoughJudgesException, CannotFindWorkingConfigurationException, NotEnoughAttendancesException
+from .exceptions import NotEnoughJudgesException, CannotFindWorkingConfigurationException, NotEnoughAttendancesException, NotEnoughRoomsException
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib import messages
 from django.urls import reverse
@@ -301,6 +301,8 @@ def generate_debates(request):
             messages.error(request, str(nea))
         except NotEnoughJudgesException as nej:
             messages.error(request, str(nej))
+        except NotEnoughRoomsException as ner:
+            messages.error(request, str(ner))
         except CannotFindWorkingConfigurationException as e:
             messages.error(request, str(e))
         else:
