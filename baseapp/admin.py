@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Team, Speaker, Attendance, Debate, Score, MatchDay, Veto
+from .models import Team, Speaker, Attendance, Debate, Score, MatchDay, Veto, Room
 from django.urls import path, include
 from django.utils import timezone
 from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
@@ -224,6 +224,11 @@ class MyVetoAdmin(admin.ModelAdmin):
     list_display = ('initiator', 'receiver', 'affected_debates')
     list_display_links = ('initiator', 'receiver')
 
+
+class MyRoomAdmin(admin.ModelAdmin):
+    list_display = ('date', 'name')
+    list_filter = ('date',)
+
 class MyAdminSite(admin.AdminSite):
     site_header = "UQ Debating Society Internals Administration"
     site_title = "UQDS Admin"
@@ -233,9 +238,10 @@ class MyAdminSite(admin.AdminSite):
             'Teams': 1,
             'Speakers': 2,
             'Attendances': 3,
-            'Draws': 4,
-            'Debates': 5,
-            'Vetos': 6
+            'Rooms': 4,
+            'Draws': 5,
+            'Debates': 6,
+            'Vetos': 7
         }
         app_dict = self._build_app_dict(request)
         # Sort apps alphabetically
@@ -256,6 +262,7 @@ admin_site.register(Attendance, MyAttendanceAdmin)
 admin_site.register(MatchDay, MyMatchDayAdmin)
 admin_site.register(Debate, MyDebateAdmin)
 admin_site.register(Veto, MyVetoAdmin)
+admin_site.register(Room, MyRoomAdmin)
 
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.admin import UserAdmin, GroupAdmin
