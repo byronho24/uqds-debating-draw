@@ -126,7 +126,7 @@ class Debate(models.Model):
     winning_team = models.ForeignKey(Team, null=True, blank=False,
                                         default=None, on_delete=models.CASCADE,
                                             related_name="debates_won")
-    room = models.ForeignKey(Room, on_delete=models.SET_NULL, blank=True, null=True)
+    room = models.ForeignKey('Room', on_delete=models.SET_NULL, blank=True, null=True)
     
     def __str__(self):
         return f"{self.match_day}"
@@ -182,5 +182,4 @@ class Veto(models.Model):
 class Room(models.Model):
 
     date = models.DateField(default=timezone.localdate)
-    match_day = models.ForeignKey(MatchDay, blank=True, null=True, on_delete=models.SET_NULL)
     name = models.CharField(max_length=100)
