@@ -1,9 +1,9 @@
-from .models import Attendance, Speaker, Team, Debate, MatchDay, Veto
+from .models import Attendance, Speaker, Team, Debate, MatchDay, Veto, Room
 from django.utils import timezone
 from typing import List
 import math
 from operator import itemgetter, attrgetter
-from .exceptions import NotEnoughJudgesException, CannotFindWorkingConfigurationException, NotEnoughAttendancesException
+from .exceptions import NotEnoughJudgesException, CannotFindWorkingConfigurationException, NotEnoughAttendancesException, NotEnoughRoomsException
 
 # Weightings
 WEIGHTS = {
@@ -174,10 +174,10 @@ def can_host_debates(attendances_competing, judges_count: int):
 
 def _assign_competing_teams(attendances: List[Attendance]):
     """
-    Determines which teams are competing and the speakers that will be judging on the day.
+    Determines which teams are competing and the speakers that will be judging given a list of Attendances.
 
     :param attendances: Attendances to be assigned competitions to
-    :return: the generated MatchDay
+    :return: a tuple of (attendances competing, attendances judging)
     :ensures: - list of competing attendances have an even number amount of elements and is non-zero
               - len(judges) >= floor(len(attendances_competing) / 2)
     """
@@ -226,16 +226,30 @@ def _assign_competing_teams(attendances: List[Attendance]):
     if not can_host_debates(attendances_competing, qualified_judges_count):
         return NotEnoughJudgesException("Not enough qualified judges to host debates.")
 
+    # Result valid
+    return (attendances_competing, attendances_judging)
+    
+    
+
+def assign_teams_today():
+    today = timezone.localdate()
+    attendances_today = Attendance.objects.filter(date=today)
+    rooms_today_count = Room.objects.filter(date=today).count()
+
+    attendances_competing, attendances_judging = _assign_competing_teams(attendances_today)
+
+    # Check if there are enough rooms
+    if _number_of_debates(len(attendances_competing)) > rooms_today_count:
+        raise NotEnoughRoomsException("Not enough rooms available for debates.")
+
     # Assigning process gives valid result - now save to new MatchDay instance
-    date = attendances[0].date
-    match_day = MatchDay(date=date)
+    match_day = MatchDay(date=today)
     match_day.save()
     match_day.attendances_competing.set(attendances_competing)
     match_day.attendances_judging.set(attendances_judging)
     match_day.save()
 
     return match_day
-    
 
 def compare_aff_neg(team: Team):
         """
@@ -402,8 +416,6 @@ def generate_debates(date):
     :param attendances: Attendances to generate debates for
     :return: the generated MatchDay
     """
-    # Get attendances
-    attendances = list(Attendance.objects.filter(date=date))
-    match_day = _matchmake(_assign_competing_teams(attendances))
+    match_day = _matchmake(assign_teams_today())
     match_day.save()
     return match_day
