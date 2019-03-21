@@ -312,6 +312,7 @@ def _matchmake(match_day: MatchDay):
     :return: the generated MatchDay
     :requires:  - len(attendances_competing) is greater than zero and even
                 - len(judges) >= floor(len(attendances) / 2)
+                - number of rooms for the day is at least the number of debates
 
     """
     # Clear any existing debates for the day
@@ -363,7 +364,7 @@ def _matchmake(match_day: MatchDay):
         
         # Assign room
         debate.room = rooms[i]
-        
+
         debate.save()
         debates.append(debate)
 

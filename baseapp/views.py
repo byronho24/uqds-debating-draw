@@ -40,6 +40,7 @@ def debates(request):
 
         context['debates'].append({
             'debate_id': debate.id,
+            'room': debate.room.name,
             'team1': {
                 'name': debate.affirmative.team.name,
                 'speakers': debate.affirmative.speakers.all()
