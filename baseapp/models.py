@@ -126,6 +126,7 @@ class Debate(models.Model):
     winning_team = models.ForeignKey(Team, null=True, blank=False,
                                         default=None, on_delete=models.CASCADE,
                                             related_name="debates_won")
+    room = models.ForeignKey(Room, on_delete=models.SET_NULL, blank=True, null=True)
     
     def __str__(self):
         return f"{self.match_day}"

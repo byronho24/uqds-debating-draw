@@ -324,6 +324,8 @@ def _matchmake(match_day: MatchDay):
         for judge in get_qualified_judges(attendance):
             judges.append(judge)
 
+    rooms = list(Room.objects.filter(date=match_day.date))
+
     # Rank teams
     attendances_competing = rank_attendances(attendances_competing)
     number_of_debates = _number_of_debates(len(attendances_competing))
@@ -358,6 +360,10 @@ def _matchmake(match_day: MatchDay):
         judge_indices = range(i, len(judges), number_of_debates)
         for judge_index in judge_indices:
             debate.judges.add(judges[judge_index])
+        
+        # Assign room
+        debate.room = rooms[i]
+        
         debate.save()
         debates.append(debate)
 
