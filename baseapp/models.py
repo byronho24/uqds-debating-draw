@@ -51,7 +51,7 @@ class Speaker(models.Model):
         'AustralsBreak': 20,
         'AWDCBreak': 10,
         'WUDCBreak': 100,
-        'LowQualified': 1,
+        'MiniBreak': 5,
         'HighQualified': 20,
         'JudgeBreak': 30
     }
@@ -67,7 +67,7 @@ class Speaker(models.Model):
     australs_break = models.BooleanField(default=False)
     awdc_break = models.BooleanField(default=False)
     wudc_break = models.BooleanField(default=False)
-    low_qualified = models.BooleanField(default=False)
+    mini_break = models.BooleanField(default=False)
     high_qualified = models.BooleanField(default=False)
     judge_break = models.BooleanField(default=False)
     qualification_score = models.IntegerField(editable=False, default=0)
@@ -91,7 +91,7 @@ class Speaker(models.Model):
                  self.australs_break * self.WEIGHTS['AustralsBreak'] + \
                  self.awdc_break * self.WEIGHTS['AWDCBreak'] + \
                  self.wudc_break * self.WEIGHTS['WUDCBreak'] + \
-                 self.low_qualified * self.WEIGHTS['LowQualified'] + \
+                 self.mini_break * self.WEIGHTS['MiniBreak'] + \
                  self.high_qualified * self.WEIGHTS['HighQualified'] + \
                  self.judge_break * self.WEIGHTS['JudgeBreak']
         return score
