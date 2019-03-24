@@ -183,9 +183,15 @@ def upload_speaker_data(request):
     from django.core.files.storage import FileSystemStorage, File
     if request.method == 'POST' and request.FILES['myfile']:
         myfile = request.FILES['myfile']
-        fs = FileSystemStorage()
+        fs = FileSystemStorage(location=settings.MEDIA_ROOT)
         filename = fs.save(myfile.name, myfile)
-        messages.success(request, "File successfully uploaded.")
+
+        from .importer import import_speaker_data
+        file_path = settings.MEDIA_ROOT + '/' + myfile.name
+        if import_speaker_data(file_path):
+            messages.success(request, "Speaker data imported successfully.")
+        else:
+            messages.error(request, "Errors occurred while importing speaker data.")
     return render(request, "baseapp/file_upload.html")
 
 

@@ -9,10 +9,11 @@ def import_speaker_data(csv_file):
     with open(csv_file, 'r') as file:
         reader = csv.DictReader(file)
         for row in reader:
-            speaker = Speaker()
             speaker_name_list = [row["First Name"], row["Surname"]]
             name = " ".join(speaker_name_list)
-            speaker.name = name
+            speaker, created = Speaker.objects.get_or_create(
+                name=name
+            )
 
             speaker.state_team = to_bool(row["State Team"])
             speaker.pro = to_bool(row["Pro"])
