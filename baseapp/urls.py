@@ -10,6 +10,7 @@ urlpatterns = [
     path('signupform/', views.signupform, name='signupform'),
     path('attendanceform/', views.attendanceform, name='attendanceform'),
     # path('table/', views.table, name='table'),
+    path('upload_data/', views.upload_speaker_data, name="upload_speaker_data")
     path('simulate-rounds/', views.simulate_rounds, name='simulate_rounds'),
 
     path('generate-debates', views.generate_debates, name="generate_debates"),

@@ -177,6 +177,18 @@ def simulate_rounds(request):
     # match_days = simulate_rounds(1)
     return render(request, 'baseapp/simulate_rounds.html', {'match_days': match_days})
 
+
+def upload_speaker_data(request):
+    from django.conf import settings
+    from django.core.files.storage import FileSystemStorage, File
+    if request.method == 'POST' and request.FILES['myfile']:
+        myfile = request.FILES['myfile']
+        fs = FileSystemStorage()
+        filename = fs.save(myfile.name, myfile)
+        messages.success(request, "File successfully uploaded.")
+    return render(request, "baseapp/file_upload.html")
+
+
 # def record_results(request):
 #     # Get all the debates for that week
 #     today = timezone.localdate()

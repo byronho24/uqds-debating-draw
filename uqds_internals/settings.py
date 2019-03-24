@@ -140,3 +140,7 @@ django_heroku.settings(locals())
 # Database on Heroku
 import dj_database_url
 DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
+
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_Root = os.path.join(BASE_DIR, 'media')
