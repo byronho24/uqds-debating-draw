@@ -41,7 +41,7 @@ class SpeakerManager(models.Manager):
 
 class Speaker(models.Model):
 
-    JUDGE_THRESHOLD = 10
+    JUDGE_THRESHOLD = 1
 
     WEIGHTS = {
         'StateTeam': 10,
