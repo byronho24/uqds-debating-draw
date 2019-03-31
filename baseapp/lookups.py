@@ -13,6 +13,9 @@ class SpeakersLookupForTeamSignup(LookupChannel):
     def format_item_display(self, item):
         return f"<span class='speaker'>{item.name}</span>"
 
+    def check_auth(self, request):
+        return True
+
 # @register('attendances_for_debate')
 # class AttendancesLookupForDebate(LookupChannel):
 
