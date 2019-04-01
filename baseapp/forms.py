@@ -17,7 +17,9 @@ class TeamAttendanceForm(forms.ModelForm):
                             "priority for judging.",
             'team': 
                     "Your team can change your attendance as many times as you like - only the " +\
-                        "most recent one would be recorded."
+                        "most recent one would be recorded.",
+            'speakers':
+                    "Hold down Ctrl/Cmd to select more than one speaker"
         }
 
 
