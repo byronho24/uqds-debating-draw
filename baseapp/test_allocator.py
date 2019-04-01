@@ -30,7 +30,8 @@ def generate_attendance(date, team):
 
 def generate_attendances(date):
     attendances_count = random.randint(ATTENDACES_PER_MATCHDAY_AVG - 2, ATTENDACES_PER_MATCHDAY_AVG + 2)
-    teams_attending = random.sample(list(Team.objects.all()), attendances_count)
+    teams = list(Team.objects.all())
+    teams_attending = random.sample(teams, min(attendances_count, len(teams)))
     attendances = []
     for team in teams_attending:
         # Generate attendance
