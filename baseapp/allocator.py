@@ -238,7 +238,7 @@ def assign_teams_for_date(date, ignore_rooms=False):
     attendances_competing, attendances_judging = _assign_competing_teams(attendances_today)
 
     # Check if there are enough rooms
-    if ignore_rooms and _number_of_debates(len(attendances_competing)) > rooms_today_count:
+    if not ignore_rooms and _number_of_debates(len(attendances_competing)) > rooms_today_count:
         raise NotEnoughRoomsException("Not enough rooms available for debates.")
 
     # Assigning process gives valid result - now save to new MatchDay instance
