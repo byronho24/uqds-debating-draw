@@ -13,7 +13,7 @@ def generate_attendance(date, team):
         attending_speakers_count = random.randint(2, 3)
     else:
         attending_speakers_count = random.randint(1, 2)
-    attending_speakers = random.sample(list(team.speaker_set.all()), attending_speakers_count)
+    attending_speakers = random.sample(list(team.speaker_set.all()), min(attending_speakers_count, speakers_count))
     prefer_to_judge = random.choice([True] * (int(100 * PROB_PREFER_TO_JUDGE)) + \
                                         [False] * int(100 * (1 - PROB_PREFER_TO_JUDGE)))
     
