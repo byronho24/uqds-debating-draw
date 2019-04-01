@@ -303,7 +303,7 @@ def is_debated_before(team1: Team, team2: Team):
             Debate.objects.filter(affirmative__team=team2, negative__team=team1)
     return qs.exists()
 
-def _matchmake(match_day: MatchDay):
+def _matchmake(match_day: MatchDay, ignore_rooms=False):
     """
     Assigns the debates for the day.
 
@@ -361,7 +361,7 @@ def _matchmake(match_day: MatchDay):
         for judge_index in judge_indices:
             debate.judges.add(judges[judge_index])
         
-        if rooms:
+        if not ignore_rooms:
             # Assign room
             debate.room = rooms[i]
 
@@ -423,6 +423,6 @@ def generate_debates(date, **kwargs):
     :param attendances: Attendances to generate debates for
     :return: the generated MatchDay
     """
-    match_day = _matchmake(assign_teams_for_date(date, **kwargs))
+    match_day = _matchmake(assign_teams_for_date(date, **kwargs), **kwargs)
     match_day.save()
     return match_day
