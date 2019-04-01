@@ -242,7 +242,7 @@ def assign_teams_for_date(date, ignore_rooms=False):
         raise NotEnoughRoomsException("Not enough rooms available for debates.")
 
     # Assigning process gives valid result - now save to new MatchDay instance
-    match_day = MatchDay(date=today)
+    match_day = MatchDay(date=date)
     match_day.save()
     match_day.attendances_competing.set(attendances_competing)
     match_day.attendances_judging.set(attendances_judging)
@@ -361,8 +361,9 @@ def _matchmake(match_day: MatchDay):
         for judge_index in judge_indices:
             debate.judges.add(judges[judge_index])
         
-        # Assign room
-        debate.room = rooms[i]
+        if rooms:
+            # Assign room
+            debate.room = rooms[i]
 
         debate.save()
         debates.append(debate)
