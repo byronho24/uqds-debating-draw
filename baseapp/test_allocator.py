@@ -81,7 +81,7 @@ def simulate_rounds(count):
         date = today + timedelta(days=i+1)
         generate_attendances(date)
         # Generate debates
-        match_day = generate_debates(date)
+        match_day = generate_debates(date, ignore_rooms=True)
         # Generate debate results
         for debate in match_day.debate_set.all():
             generate_debate_results(debate)

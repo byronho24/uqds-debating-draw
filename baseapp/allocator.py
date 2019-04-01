@@ -231,14 +231,14 @@ def _assign_competing_teams(attendances: List[Attendance]):
     
     
 
-def assign_teams_for_date(date):
+def assign_teams_for_date(date, ignore_rooms=False):
     attendances_today = Attendance.objects.filter(date=date)
     rooms_today_count = Room.objects.filter(date=date).count()
 
     attendances_competing, attendances_judging = _assign_competing_teams(attendances_today)
 
     # Check if there are enough rooms
-    if _number_of_debates(len(attendances_competing)) > rooms_today_count:
+    if ignore_rooms and _number_of_debates(len(attendances_competing)) > rooms_today_count:
         raise NotEnoughRoomsException("Not enough rooms available for debates.")
 
     # Assigning process gives valid result - now save to new MatchDay instance
@@ -414,7 +414,7 @@ def _matchmake(match_day: MatchDay):
 
     return match_day
 
-def generate_debates(date):
+def generate_debates(date, **kwargs):
     """
     Generates debates given the date.
     Instantiates Debate objects and saves them to the database.
@@ -422,6 +422,6 @@ def generate_debates(date):
     :param attendances: Attendances to generate debates for
     :return: the generated MatchDay
     """
-    match_day = _matchmake(assign_teams_for_date(date))
+    match_day = _matchmake(assign_teams_for_date(date, **kwargs))
     match_day.save()
     return match_day
