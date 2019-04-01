@@ -173,7 +173,10 @@ def simulate_rounds(request):
     match_days = []
     if request.method == 'POST':
         rounds = int(request.POST['rounds'])
-        match_days = simulate_rounds(rounds)
+        try:
+            match_days = simulate_rounds(rounds)
+        except Exception as err:
+            messages.error(request, str(err))
     # match_days = simulate_rounds(1)
     return render(request, 'baseapp/simulate_rounds.html', {'match_days': match_days})
 
