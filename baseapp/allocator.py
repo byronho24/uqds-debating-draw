@@ -231,10 +231,9 @@ def _assign_competing_teams(attendances: List[Attendance]):
     
     
 
-def assign_teams_today():
-    today = timezone.localdate()
-    attendances_today = Attendance.objects.filter(date=today)
-    rooms_today_count = Room.objects.filter(date=today).count()
+def assign_teams_for_date(date):
+    attendances_today = Attendance.objects.filter(date=date)
+    rooms_today_count = Room.objects.filter(date=date).count()
 
     attendances_competing, attendances_judging = _assign_competing_teams(attendances_today)
 
@@ -423,6 +422,6 @@ def generate_debates(date):
     :param attendances: Attendances to generate debates for
     :return: the generated MatchDay
     """
-    match_day = _matchmake(assign_teams_today())
+    match_day = _matchmake(assign_teams_for_date(date))
     match_day.save()
     return match_day
