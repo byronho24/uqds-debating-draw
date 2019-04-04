@@ -163,7 +163,7 @@ class Score(models.Model):
     speaker = models.ForeignKey(Speaker, on_delete=models.CASCADE)
     score = models.DecimalField(max_digits=3, decimal_places=1, blank=False,
                                     validators=[
-                                        MaxValueValidator(10),
+                                        MaxValueValidator(100),
                                         MinValueValidator(1)
                                     ])
     debate = models.ForeignKey(Debate, on_delete=models.CASCADE)
