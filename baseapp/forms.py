@@ -11,13 +11,15 @@ class TeamAttendanceForm(forms.ModelForm):
             'speakers': "Attending Speakers"
         }
         help_texts = {
-            'want_to_judge': 
+            'want_to_judge':
                     "Note that this does not guarantee that you would judge/not judge; but "+\
                         "if checked, this would inform the allocation system to place your team at a higher "+\
                             "priority for judging.",
-            'team': 
-                    "Your team can change your attendance as many times as you like - only the " +\
-                        "most recent one would be recorded.",
+            'team':
+                    "Only 1 person from each team should complete this weekly attendance form.<br>" + \
+                    "You must select ALL speakers who are here this week.<br>"
+                    "You can change your attendance as many times as you like, only the " +\
+                        "most recent submission will be used.",
             'speakers':
                     "Hold down Ctrl/Cmd to select more than one speaker"
         }
