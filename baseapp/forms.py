@@ -12,13 +12,12 @@ class TeamAttendanceForm(forms.ModelForm):
         }
         help_texts = {
             'want_to_judge':
-                    "Note that this does not guarantee that you would judge/not judge; but "+\
-                        "if checked, this would inform the allocation system to place your team at a higher "+\
-                            "priority for judging.",
+                    "This does not guarantee that you will or wont judge, but "+\
+                        "if checked it will place you on a higher judge priority.",
             'team':
                     "Only 1 person from each team should complete this weekly attendance form.<br>" + \
                     "You must select ALL speakers who are here this week.<br>"
-                    "You can change your attendance as many times as you like, only the " +\
+                    "You can change your attendance by resubmitting. Only the " +\
                         "most recent submission will be used.",
             'speakers':
                     "Hold down Ctrl/Cmd to select more than one speaker"
@@ -39,7 +38,7 @@ class TeamSignupForm(forms.ModelForm):
         self.fields['speakers'].help_text = \
             "<p id='speakersHelp' class='form-text text-muted'>" + \
             "Start typing to search for speakers by their name.<br>" + \
-            "Only speakers that are already members of UQDS and are not already in a team are available for selection." + \
+            "Only speakers that are UQDS Members and are not already in a team can be selected." + \
             "</p>"
 
 class DebateResultsForm(forms.ModelForm):

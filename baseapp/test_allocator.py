@@ -1,7 +1,7 @@
 from django.test import TestCase
 from .models import Speaker, Attendance, Team, MatchDay, Score
 from .allocator import generate_debates
-import random 
+import random
 
 ATTENDACES_PER_MATCHDAY_AVG = 20
 PROB_PREFER_TO_JUDGE = 0.15
@@ -16,7 +16,7 @@ def generate_attendance(date, team):
     attending_speakers = random.sample(list(team.speaker_set.all()), min(attending_speakers_count, speakers_count))
     prefer_to_judge = random.choice([True] * (int(100 * PROB_PREFER_TO_JUDGE)) + \
                                         [False] * int(100 * (1 - PROB_PREFER_TO_JUDGE)))
-    
+
     # Create attendance
     attendance = Attendance()
     attendance.date = date
@@ -52,18 +52,18 @@ def generate_debate_results(debate):
     neg_win_prob = 1 - aff_win_prob
     winning_team = random.choice([affirmative_team] * int(100 * aff_win_prob) + \
                                         [negative_team] * int(100 * neg_win_prob))
-    
+
     from decimal import Decimal
     for speaker in winning_team.speaker_set.all():
         # New score object
         score = random.randint(9,10)
         Score.objects.create(debate=debate, speaker=speaker, score=score)
-    
+
     losing_team = next(team for team in [affirmative_team, negative_team] if team != winning_team)
     for speaker in losing_team.speaker_set.all():
         score = random.randint(7,8)
         Score.objects.create(debate=debate, speaker=speaker, score=score)
-    
+
     debate.winning_team = winning_team
     debate.save()
     return debate
@@ -72,7 +72,7 @@ def simulate_rounds(count):
     from datetime import timedelta
     from django.utils import timezone
     today = timezone.localdate()
-    
+
     # Clear data from previous simulations
     MatchDay.objects.filter(date__gt=today).delete()
     Attendance.objects.filter(date__gt=today).delete()
